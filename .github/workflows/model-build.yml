@@ -1,0 +1,118 @@
+name: Build Model
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-build.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-build.yml'
+
+jobs:
+  build:
+    name: Build Mamba Model
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+
+      - name: Configure build
+        working-directory: ./model
+        run: |
+          cmake -S . -B build -DENABLE_HIP=OFF -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        working-directory: ./model
+        run: cmake --build build --config Release --parallel
+name: Build Model
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-build.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-build.yml'
+
+jobs:
+  build:
+    name: Build Mamba Model
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+
+      - name: Configure build
+        working-directory: ./model
+        run: |
+          cmake -S . -B build -DENABLE_HIP=OFF -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        working-directory: ./model
+        run: cmake --build build --config Release --parallel
+name: Build Model
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-build.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-build.yml'
+
+jobs:
+  build:
+    name: Build Mamba Model
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+
+      - name: Configure build
+        working-directory: ./model
+        run: |
+          cmake -S . -B build -DENABLE_HIP=OFF -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        working-directory: ./model
+        run: cmake --build build --config Release --parallel
+

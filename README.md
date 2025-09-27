@@ -1,3 +1,77 @@
+This is the Relentless Market parent repository. Each major component lives in a dedicated git submodule so the services can evolve independently while staying coordinated from this mono-parent repo.
+
+## Submodule Overview
+
+- `api` – Koa-based API service
+- `scanner` – Node stock scanner that feeds market data
+- `website` – SvelteKit marketing and account experience
+- `inference-service` – FastAPI RAG inference layer
+- `client` – SwiftUI macOS trading platform (public)
+- `model` – C++ Mamba/Matryoshka research stack (private submodule)
+
+Clone recursively to pull every component in one step:
+
+```bash
+git clone --recursive git@github.com:relentless-market/relentless.git
+```
+
+If you already cloned without submodules, sync them via:
+
+```bash
+git submodule update --init --recursive
+```
+
+## Model Build Automation
+
+Two GitHub workflows keep the `model` submodule healthy whenever commits land on `main`:
+
+- `.github/workflows/model-build.yml` runs on GitHub-hosted `ubuntu-latest`. It checks out the repo **with submodules**, configures CMake with `-DENABLE_HIP=OFF`, and ensures the CPU-only build succeeds. No secrets or credits required—runs on free minutes.
+- `.github/workflows/model-olympus.yml` runs on the self-hosted runner tagged `self-hosted`, `olympus`, `rocm`. It launches the official `rocm/dev-ubuntu-22.04:5.7-complete` container with `/dev/kfd` and `/dev/dri/renderD{128,129}` pass-through so both the discrete and integrated AMD GPUs are visible inside the container. Inside the container it installs build deps, configures CMake with `-DENABLE_HIP=ON`, and compiles against ROCm to verify our HIP path.
+
+### Kicking Off Builds
+
+1. Push a commit that updates the `model` submodule pointer (or edit the workflow files). Both workflows trigger automatically on `main`.
+2. You can also call the ROCm workflow manually for debugging:
+
+```bash
+gh workflow run model-olympus.yml
+```
+
+3. Check results under **Actions** → choose the workflow → select the latest run. The HIP job prints detected GPUs via `rocminfo` so you can confirm discrete + integrated devices are bound correctly.
+
+### Local Testing
+
+To replicate the CI jobs locally:
+
+```bash
+# CPU build
+cd model
+cmake -S . -B build -DENABLE_HIP=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
+
+# HIP build (assuming ROCm stack installed)
+cmake -S . -B build-rocm -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build-rocm --config Release --parallel
+```
+
+For container parity with the Olympus runner, use the same ROCm image and device mappings:
+
+```bash
+docker run --rm -it \
+  --device=/dev/kfd \
+  --device=/dev/dri \
+  --device=/dev/dri/renderD128 \
+  --device=/dev/dri/renderD129 \
+  --group-add video \
+  --group-add render \
+  --ipc=host \
+  --security-opt seccomp=unconfined \
+  -v "$PWD/model":/workspace/model \
+  -w /workspace/model \
+  rocm/dev-ubuntu-22.04:5.7-complete bash
+```
+
+Once inside the container run the same CMake commands as the workflow. This is the fastest way to reproduce CI issues with HIP or driver visibility.
 # Mamba2 Model with Matryoshka Encoding
 
 A standalone C++ implementation of the Mamba2 architecture with matryoshka encoding for adaptive dimensionality reduction and efficient long-range sequence modeling. Mamba2 introduces significant improvements over the original Mamba architecture.

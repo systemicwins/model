@@ -1,0 +1,175 @@
+name: Build Model on Olympus ROCm
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-olympus.yml'
+  workflow_dispatch:
+
+jobs:
+  build-rocm:
+    name: Build with ROCm GPUs on Olympus
+    runs-on: [ self-hosted, olympus, rocm ]
+    env:
+      HIP_VISIBLE_DEVICES: "0,1"
+      HSA_OVERRIDE_GFX_VERSION: "11.0.0"
+    container:
+      image: rocm/dev-ubuntu-22.04:5.7-complete
+      options: >-
+        --device=/dev/kfd
+        --device=/dev/dri
+        --device=/dev/dri/renderD128
+        --device=/dev/dri/renderD129
+        --group-add video
+        --group-add render
+        --ipc=host
+        --security-opt seccomp=unconfined
+    defaults:
+      run:
+        shell: bash
+        working-directory: model
+
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install build tooling inside container
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libcurl4-openssl-dev
+
+      - name: Configure with HIP enabled
+        run: cmake -S . -B build -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: List HIP-visible devices
+        run: rocminfo | grep -E "^\s+Name|^\s+Device"
+name: Build Model on Olympus ROCm
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-olympus.yml'
+  workflow_dispatch:
+
+jobs:
+  build-rocm:
+    name: Build with ROCm GPUs on Olympus
+    runs-on: [ self-hosted, olympus, rocm ]
+    env:
+      HIP_VISIBLE_DEVICES: "0,1"
+      HSA_OVERRIDE_GFX_VERSION: "11.0.0"
+    container:
+      image: rocm/dev-ubuntu-22.04:5.7-complete
+      options: >-
+        --device=/dev/kfd
+        --device=/dev/dri
+        --device=/dev/dri/renderD128
+        --device=/dev/dri/renderD129
+        --group-add video
+        --group-add render
+        --ipc=host
+        --security-opt seccomp=unconfined
+    defaults:
+      run:
+        shell: bash
+        working-directory: model
+
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install build tooling inside container
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libcurl4-openssl-dev
+
+      - name: Configure with HIP enabled
+        run: cmake -S . -B build -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: List HIP-visible devices
+        run: rocminfo | grep -E "^\s+Name|^\s+Device"
+name: Build Model on Olympus ROCm
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'model'
+      - 'model/**'
+      - '.github/workflows/model-olympus.yml'
+  workflow_dispatch:
+
+jobs:
+  build-rocm:
+    name: Build with ROCm GPUs on Olympus
+    runs-on: [ self-hosted, olympus, rocm ]
+    env:
+      HIP_VISIBLE_DEVICES: "0,1"
+      HSA_OVERRIDE_GFX_VERSION: "11.0.0"
+    container:
+      image: rocm/dev-ubuntu-22.04:5.7-complete
+      options: >-
+        --device=/dev/kfd
+        --device=/dev/dri
+        --device=/dev/dri/renderD128
+        --device=/dev/dri/renderD129
+        --group-add video
+        --group-add render
+        --ipc=host
+        --security-opt seccomp=unconfined
+    defaults:
+      run:
+        shell: bash
+        working-directory: model
+
+    steps:
+      - name: Check out repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install build tooling inside container
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libcurl4-openssl-dev
+
+      - name: Configure with HIP enabled
+        run: cmake -S . -B build -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: List HIP-visible devices
+        run: rocminfo | grep -E "^\s+Name|^\s+Device"
+
