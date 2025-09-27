@@ -64,9 +64,17 @@ jobs:
       - name: Configure (HIP)
         env:
           CMAKE_PREFIX_PATH: ${{ env.CMAKE_PREFIX_PATH }}
-          CC: /opt/rocm/bin/hipcc
-          CXX: /opt/rocm/bin/hipcc
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_HIP=ON -Dhip_DIR=${{ env.hip_DIR }} -Dhipblas_DIR=${{ env.hipblas_DIR }} -Dhipfft_DIR=${{ env.hipfft_DIR }} -Drocrand_DIR=${{ env.rocrand_DIR }}
+        run: |
+          rm -rf build
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=/opt/rocm/bin/hipcc \
+            -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
+            -DENABLE_HIP=ON \
+            -Dhip_DIR=${{ env.hip_DIR }} \
+            -Dhipblas_DIR=${{ env.hipblas_DIR }} \
+            -Dhipfft_DIR=${{ env.hipfft_DIR }} \
+            -Drocrand_DIR=${{ env.rocrand_DIR }}
 
       - name: Build (HIP)
         env:
