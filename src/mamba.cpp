@@ -6,6 +6,19 @@
 
 namespace mamba {
 
+// Minimal MambaBlock implementation to satisfy linker
+MambaBlock::MambaBlock(const MambaConfig& config)
+    : config_(config) {}
+
+MambaBlock::~MambaBlock() = default;
+
+transformer::Matrix MambaBlock::forward(const transformer::Matrix& input,
+                                        const transformer::Matrix* /*mask*/) {
+    return input;
+}
+
+void MambaBlock::set_training(bool /*training*/) {}
+
 MambaModel::MambaModel(const MambaConfig& config)
     : config_(config) {
 }
