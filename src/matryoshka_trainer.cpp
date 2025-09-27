@@ -136,8 +136,8 @@ void MatryoshkaTrainer::curriculum_train(const std::vector<std::vector<float>>& 
     std::cout << "Curriculum training completed!\n";
 }
 
-void MatryoshkaTrainer::distill_from_transformer(const std::vector<std::vector<float>>& transformer_embeddings,
-                                                const std::vector<std::string>& texts) {
+void MatryoshkaTrainer::distill_from_mamba(const std::vector<std::vector<float>>& transformer_embeddings,
+                                 const std::vector<std::string>& texts) {
     
     std::cout << "Starting distillation from transformer embeddings\n";
     std::cout << "Number of samples: " << transformer_embeddings.size() << "\n\n";

@@ -8,6 +8,11 @@
 
 namespace mamba {
 
+// Import tensor types from transformer namespace for convenience
+using transformer::Scalar;
+using transformer::Matrix;
+using transformer::Vector;
+
 class LayerNorm;
 
 struct MambaConfig {
