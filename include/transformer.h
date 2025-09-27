@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include "layer_norm.h"
 #include <Eigen/Dense>
 #include "tensor_ops.h"
 
@@ -43,24 +44,16 @@ public:
 
 private:
     MambaConfig config_;
-    std::unique_ptr<LayerNorm> norm1_;
-    std::unique_ptr<LayerNorm> norm2_;
 
-    // SSM parameters
-    transformer::Matrix A_;  // State transition matrix (state_dim x state_dim)
-    transformer::Matrix B_;  // Input projection matrix (state_dim x embed_dim)
-    transformer::Matrix C_;  // Output projection matrix (embed_dim x state_dim)
-    transformer::Matrix D_;  // Direct feedthrough matrix (embed_dim x embed_dim)
+    // SSM parameters (placeholders)
+    transformer::Matrix A_;
+    transformer::Matrix B_;
+    transformer::Matrix C_;
+    transformer::Matrix D_;
 
-    // Convolution parameters
-    transformer::Matrix conv_weight_;  // Convolution kernel (embed_dim x embed_dim x kernel_size)
-
-    // Gating parameters
-    transformer::Matrix gate_proj_;  // Gate projection (embed_dim x (expand_factor * embed_dim))
-
-    // Production implementation
-    class MambaBlockImpl;
-    std::unique_ptr<MambaBlockImpl> pImpl;
+    // Convolution and gating (placeholders)
+    transformer::Matrix conv_weight_;
+    transformer::Matrix gate_proj_;
 };
 
 class MambaModel {
@@ -86,15 +79,10 @@ public:
 private:
     MambaConfig config_;
     std::vector<std::unique_ptr<MambaBlock>> layers_;
-    std::unique_ptr<LayerNorm> final_norm_;
 
     // Learnable parameters
     transformer::Matrix positional_encoding_;
     transformer::Matrix output_projection_;
-
-    // Production implementation
-    class MambaModelImpl;
-    std::unique_ptr<MambaModelImpl> pImpl;
 };
 
 } // namespace mamba
