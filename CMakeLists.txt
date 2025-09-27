@@ -10,9 +10,10 @@ option(ENABLE_HIP "Enable HIP/ROCm GPU acceleration" OFF)
 
 if(ENABLE_HIP)
     find_package(hip REQUIRED)
-    find_package(hipblas REQUIRED)
-    find_package(hipfft REQUIRED)
-    find_package(rocrand REQUIRED)
+    # Try to find optional ROCm libs; don't fail CMake if missing
+    find_package(hipblas QUIET)
+    find_package(hipfft QUIET)
+    find_package(rocrand QUIET)
 endif()
 
 # Find required packages
@@ -93,10 +94,16 @@ if(ENABLE_HIP)
     list(APPEND MAMBA_LINK_LIBS
         hip::device
         hip::host
-        hipblas
-        hipfft
-        rocrand
     )
+    if(TARGET hipblas)
+        list(APPEND MAMBA_LINK_LIBS hipblas)
+    endif()
+    if(TARGET hipfft)
+        list(APPEND MAMBA_LINK_LIBS hipfft)
+    endif()
+    if(TARGET rocrand)
+        list(APPEND MAMBA_LINK_LIBS rocrand)
+    endif()
 endif()
 
 target_link_libraries(mamba_model PRIVATE ${MAMBA_LINK_LIBS})
