@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 #include <Eigen/Dense>
 #include "tensor_ops.h"
 
@@ -10,8 +11,6 @@ namespace mamba {
 
 // Import tensor types from transformer namespace for convenience
 using transformer::Scalar;
-using transformer::Matrix;
-using transformer::Vector;
 
 class LayerNorm;
 
@@ -39,7 +38,7 @@ public:
     MambaBlock(const MambaConfig& config);
     ~MambaBlock();
 
-    Matrix forward(const Matrix& input, const Matrix* mask = nullptr);
+    transformer::Matrix forward(const transformer::Matrix& input, const transformer::Matrix* mask = nullptr);
     void set_training(bool training);
 
 private:
@@ -48,16 +47,16 @@ private:
     std::unique_ptr<LayerNorm> norm2_;
 
     // SSM parameters
-    Matrix A_;  // State transition matrix (state_dim x state_dim)
-    Matrix B_;  // Input projection matrix (state_dim x embed_dim)
-    Matrix C_;  // Output projection matrix (embed_dim x state_dim)
-    Matrix D_;  // Direct feedthrough matrix (embed_dim x embed_dim)
+    transformer::Matrix A_;  // State transition matrix (state_dim x state_dim)
+    transformer::Matrix B_;  // Input projection matrix (state_dim x embed_dim)
+    transformer::Matrix C_;  // Output projection matrix (embed_dim x state_dim)
+    transformer::Matrix D_;  // Direct feedthrough matrix (embed_dim x embed_dim)
 
     // Convolution parameters
-    Matrix conv_weight_;  // Convolution kernel (embed_dim x embed_dim x kernel_size)
+    transformer::Matrix conv_weight_;  // Convolution kernel (embed_dim x embed_dim x kernel_size)
 
     // Gating parameters
-    Matrix gate_proj_;  // Gate projection (embed_dim x (expand_factor * embed_dim))
+    transformer::Matrix gate_proj_;  // Gate projection (embed_dim x (expand_factor * embed_dim))
 
     // Production implementation
     class MambaBlockImpl;
@@ -70,16 +69,16 @@ public:
     ~MambaModel();
 
     // Process embeddings from OpenAI text-embedding-3-small
-    Matrix forward(const Matrix& embeddings, const Matrix* mask = nullptr);
+    transformer::Matrix forward(const transformer::Matrix& embeddings, const transformer::Matrix* mask = nullptr);
 
     // Process sequence of embeddings
     std::vector<float> encode(const std::vector<std::vector<float>>& embeddings);
 
     // Get output for classification/regression tasks
-    Vector get_pooled_output(const Matrix& encoded, const std::string& pooling_method = "mean");
+    transformer::Vector get_pooled_output(const transformer::Matrix& encoded, const std::string& pooling_method = "mean");
 
     // Get embeddings at specific Matryoshka dimension for adaptive computation
-    Matrix get_embeddings_at_dimension(const Matrix& input, int target_dim);
+    transformer::Matrix get_embeddings_at_dimension(const transformer::Matrix& input, int target_dim);
 
     void save_weights(const std::string& filepath);
     void load_weights(const std::string& filepath);
@@ -90,8 +89,8 @@ private:
     std::unique_ptr<LayerNorm> final_norm_;
 
     // Learnable parameters
-    Matrix positional_encoding_;
-    Matrix output_projection_;
+    transformer::Matrix positional_encoding_;
+    transformer::Matrix output_projection_;
 
     // Production implementation
     class MambaModelImpl;
