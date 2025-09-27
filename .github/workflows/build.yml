@@ -61,6 +61,15 @@ jobs:
             echo "ROCm not found at /opt/rocm" && exit 1
           fi
 
+      - name: Install HIP runtime
+        run: |
+          # Install HIP runtime package if not available
+          if [ ! -d /opt/rocm/hip ]; then
+            echo "Installing HIP runtime package..."
+            # For Ubuntu/Debian systems:
+            sudo apt-get update && sudo apt-get install -y hip-runtime-amd
+          fi
+
       - name: Configure (HIP)
         env:
           CMAKE_PREFIX_PATH: ${{ env.CMAKE_PREFIX_PATH }}
