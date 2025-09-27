@@ -218,6 +218,10 @@ public:
                          const std::vector<int>& labels);
     
     // Distillation from transformer embeddings
+    void distill_from_transformer(const std::vector<std::vector<float>>& transformer_embeddings,
+                                 const std::vector<std::string>& texts);
+
+    // Distillation from Mamba embeddings
     void distill_from_mamba(const std::vector<std::vector<float>>& mamba_embeddings,
                                  const std::vector<std::string>& texts);
 

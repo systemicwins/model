@@ -39,6 +39,144 @@ gh workflow run model-olympus.yml
 
 3. Check results under **Actions** → choose the workflow → select the latest run. The HIP job prints detected GPUs via `rocminfo` so you can confirm discrete + integrated devices are bound correctly.
 
+## Self-Hosted Runner Setup (Olympus)
+
+The ROCm workflow runs on a self-hosted runner named "olympus" that provides GPU acceleration for builds.
+
+### Runner Setup on Ubuntu Server
+
+1. **Install GitHub Actions Runner**:
+```bash
+# Create directory
+sudo mkdir -p /opt/actions-runner
+cd /opt/actions-runner
+
+# Download runner
+curl -o actions-runner-linux-x64-2.319.1.tar.gz -L https://github.com/actions/runner/releases/download/v2.319.1/actions-runner-linux-x64-2.319.1.tar.gz
+tar xzf ./actions-runner-linux-x64-2.319.1.tar.gz
+
+# Get registration token from GitHub
+gh api repos/systemicwins/model/actions/runners/registration-token -q .token
+
+# Configure runner (replace YOUR_TOKEN with actual token)
+./config.sh --url https://github.com/systemicwins/model --token YOUR_TOKEN --labels self-hosted,olympus,rocm
+```
+
+2. **Create Systemd Service**:
+```bash
+# Create service file
+sudo tee /etc/systemd/system/actions-runner.service > /dev/null <<EOF
+[Unit]
+Description=GitHub Actions Runner
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=actions-runner
+WorkingDirectory=/opt/actions-runner
+ExecStart=/opt/actions-runner/run.sh
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create user and set permissions
+sudo useradd --create-home --shell /bin/bash actions-runner
+sudo chown -R actions-runner:actions-runner /opt/actions-runner
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable actions-runner
+sudo systemctl start actions-runner
+```
+
+3. **Verify Runner Status**:
+```bash
+# Check service status
+sudo systemctl status actions-runner
+
+# Check GitHub registration
+curl -s -H "Authorization: token $(gh auth token)" https://api.github.com/repos/systemicwins/model/actions/runners | jq -r '.runners[] | select(.name | contains("olympus")) | .name, .status'
+```
+
+### NAT Compatibility
+
+Self-hosted runners work fine behind NAT:
+- ✅ No static IP needed
+- ✅ Runner connects outbound to GitHub via HTTPS
+- ✅ NAT router just needs outbound HTTPS to github.com
+- ✅ GitHub Actions uses polling, not inbound connections
+
+### Runner Setup on Ubuntu Server
+
+1. **Install GitHub Actions Runner**:
+```bash
+# Create directory
+sudo mkdir -p /opt/actions-runner
+cd /opt/actions-runner
+
+# Download runner
+curl -o actions-runner-linux-x64-2.319.1.tar.gz -L https://github.com/actions/runner/releases/download/v2.319.1/actions-runner-linux-x64-2.319.1.tar.gz
+tar xzf ./actions-runner-linux-x64-2.319.1.tar.gz
+
+# Get registration token from GitHub
+gh api repos/systemicwins/model/actions/runners/registration-token -q .token
+
+# Configure runner (replace YOUR_TOKEN with actual token)
+./config.sh --url https://github.com/systemicwins/model --token YOUR_TOKEN --labels self-hosted,olympus,rocm
+```
+
+2. **Create Systemd Service**:
+```bash
+# Create service file
+sudo tee /etc/systemd/system/actions-runner.service > /dev/null <<EOF
+[Unit]
+Description=GitHub Actions Runner
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=actions-runner
+WorkingDirectory=/opt/actions-runner
+ExecStart=/opt/actions-runner/run.sh
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create user and set permissions
+sudo useradd --create-home --shell /bin/bash actions-runner
+sudo chown -R actions-runner:actions-runner /opt/actions-runner
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable actions-runner
+sudo systemctl start actions-runner
+```
+
+3. **Verify Runner Status**:
+```bash
+# Check service status
+sudo systemctl status actions-runner
+
+# Check GitHub registration
+curl -s -H "Authorization: token $(gh auth token)" https://api.github.com/repos/systemicwins/model/actions/runners | jq -r '.runners[] | select(.name | contains("olympus")) | .name, .status'
+```
+
+### NAT Compatibility
+
+Self-hosted runners work fine behind NAT:
+- ✅ No static IP needed
+- ✅ Runner connects outbound to GitHub via HTTPS
+- ✅ NAT router just needs outbound HTTPS to github.com
+- ✅ GitHub Actions uses polling, not inbound connections
+
 ### Local Testing
 
 To replicate the CI jobs locally:
@@ -72,6 +210,36 @@ docker run --rm -it \
 ```
 
 Once inside the container run the same CMake commands as the workflow. This is the fastest way to reproduce CI issues with HIP or driver visibility.
+
+### Verifying ROCm GPU Detection
+
+After building with ROCm enabled, verify that the GPUs are properly detected:
+
+```bash
+# Inside the ROCm container
+rocminfo | grep -E "^\s+Name|^\s+Device"
+```
+
+Expected output should show both discrete and integrated AMD GPUs:
+
+```
+Device:                    Radeon RX 7900 XTX
+Device:                    AMD Ryzen 9 7900X with Radeon Graphics
+```
+
+### Testing ROCm Build Locally
+
+To test the ROCm build on a system with ROCm installed:
+
+```bash
+# Build with HIP enabled
+cd model
+cmake -S . -B build-rocm -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build-rocm --config Release --parallel
+
+# Run a quick test
+./build-rocm/mamba_model test
+```
 # Mamba2 Model with Matryoshka Encoding
 
 A standalone C++ implementation of the Mamba2 architecture with matryoshka encoding for adaptive dimensionality reduction and efficient long-range sequence modeling. Mamba2 introduces significant improvements over the original Mamba architecture.
