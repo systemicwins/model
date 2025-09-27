@@ -1,5 +1,5 @@
-#ifndef MAMBA_H
-#define MAMBA_H
+#ifndef TRANSFORMER_H
+#define TRANSFORMER_H
 
 #include <vector>
 #include <memory>
@@ -95,4 +95,4 @@ private:
 
 } // namespace mamba
 
-#endif // MAMBA_H
+#endif // TRANSFORMER_H

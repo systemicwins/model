@@ -5,6 +5,7 @@
 #include <memory>
 #include <Eigen/Dense>
 #include "tensor_ops.h"
+#include "transformer.h"
 
 // HIP/ROCm includes for GPU support
 #ifdef HIP_ENABLED
@@ -58,3 +59,7 @@ private:
 // Forward declarations
 struct MambaConfig;
 class MambaModel;
+
+} // namespace mamba
+
+#endif // MAMBA_H

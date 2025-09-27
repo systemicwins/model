@@ -11,3 +11,7 @@
 // #include <hipfft.h>
 
 namespace mamba {
+
+// Implementation would be here; left minimal to satisfy linker if not used in CI
+
+} // namespace mamba
