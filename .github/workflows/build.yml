@@ -70,6 +70,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=/opt/rocm/bin/hipcc \
             -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
+            -DCMAKE_CXX_FLAGS="--rocm-path=/opt/rocm" \
             -DENABLE_HIP=ON \
             -Dhip_DIR=${{ env.hip_DIR }} \
             -Dhipblas_DIR=${{ env.hipblas_DIR }} \
