@@ -228,6 +228,48 @@ cmake ..
 make
 ```
 
+## Continuous Integration (GitHub Actions)
+
+- **What it does**: On every push or pull request, GitHub Actions checks out the repo, installs CMake/build tools, configures with CMake, builds the project, and attempts to run tests via `ctest` if tests are configured.
+- **When it runs**: Automatically on pushes and pull requests to any branch.
+- **Workflow file**: `.github/workflows/build.yml` (job name: `Build`).
+- **Where to monitor**: See recent runs under Actions in GitHub: `https://github.com/systemicwins/model/actions`.
+
+### Status Badge
+
+![Build](https://github.com/systemicwins/model/actions/workflows/build.yml/badge.svg)
+
+### Workflow Overview
+
+```yaml
+name: Build
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --config Release --parallel
+      - name: Run tests (if any)
+        run: |
+          if command -v ctest >/dev/null 2>&1; then
+            if [ -d build ]; then
+              (ctest --test-dir build --output-on-failure || true)
+            fi
+          fi
+```
+
+### Tips
+
+- To retrigger the pipeline, push a commit or open/update a pull request.
+- Add `ctest`-based tests to have them reported in CI. The step is best-effort and will not fail the build if tests are absent.
+
 ## Usage
 
 ### Mamba2 Model
