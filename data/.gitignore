@@ -1,0 +1,32 @@
+# Environment variables
+.env
+
+# Data directories
+SEC/*
+FED/*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store
+
+# Large data files
+*.csv
+*.json
+*.html
+*.txt
+*.xml
+
+# Keep directory structure
+!SEC/.gitkeep
+!FED/.gitkeep
