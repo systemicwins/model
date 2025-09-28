@@ -57,3 +57,13 @@ jobs:
       - name: List HIP-visible devices
         run: rocminfo | grep -E "^\s+Name|^\s+Device"
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: relentless-model-binaries-${{ github.run_number }}
+          path: |
+            model/build/matryoshka_benchmark
+            model/build/mamba_model
+          retention-days: 30
+          if-no-files-found: error
+
