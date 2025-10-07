@@ -21,9 +21,10 @@ DimensionSpecificHead::DimensionSpecificHead(int input_dim, int output_dim) {
     float scale = std::sqrt(6.0f / (input_dim + output_dim));
     std::uniform_real_distribution<float> dist(-scale, scale);
     
-    W_ = Matrix::Zero(output_dim, input_dim);
-    for (int i = 0; i < output_dim; ++i) {
-        for (int j = 0; j < input_dim; ++j) {
+    // Use in->out layout: W_ is input_dim x output_dim
+    W_ = Matrix::Zero(input_dim, output_dim);
+    for (int i = 0; i < input_dim; ++i) {
+        for (int j = 0; j < output_dim; ++j) {
             W_(i, j) = dist(gen);
         }
     }
@@ -48,7 +49,8 @@ Vector DimensionSpecificHead::forward(const Vector& input) {
 }
 
 Matrix DimensionSpecificHead::forward_batch(const Matrix& input) {
-    Matrix output = input * W_.transpose();
+    // Forward batch using in->out layout
+    Matrix output = input * W_;
     output.rowwise() += b_.transpose();
     
     // Batch layer normalization
@@ -605,13 +607,8 @@ void MatryoshkaEncoder::save_model(const std::string& filepath) {
     // Save dimension-specific heads and pooling weights
     for (int dim : config_.embedding_dims) {
         // Save pooling weights
-        const Matrix& pooling = pooling_weights_[dim];
-        int rows = pooling.rows();
-        int cols = pooling.cols();
-        file.write(reinterpret_cast<const char*>(&rows), sizeof(rows));
-        file.write(reinterpret_cast<const char*>(&cols), sizeof(cols));
-        file.write(reinterpret_cast<const char*>(pooling.data()), 
-                  sizeof(float) * rows * cols);
+    const Matrix& pooling = pooling_weights_[dim];
+    save_matrix(file, pooling);
         
         // Save normalization parameters
         const auto& [mean, std] = norm_params_[dim];
@@ -645,9 +642,9 @@ void MatryoshkaEncoder::load_model(const std::string& filepath) {
         int rows, cols;
         file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
         file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
-        Matrix pooling(rows, cols);
-        file.read(reinterpret_cast<char*>(pooling.data()), sizeof(float) * rows * cols);
-        pooling_weights_[dim] = pooling;
+    Matrix pooling;
+    load_matrix(file, pooling);
+    pooling_weights_[dim] = pooling;
         
         // Load normalization parameters
         int size;

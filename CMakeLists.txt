@@ -44,6 +44,12 @@ set(SOURCES
     src/tokenizer.cpp
     src/layer_norm.cpp
     src/mamba.cpp
+    src/transformer.cpp
+    src/hybrid_attention.cpp
+    src/attention_benchmark.cpp
+    src/hybrid_attention_benchmark.cpp
+    src/layer_comparison_benchmark.cpp
+    src/financial_prediction_demo.cpp
     src/main.cpp
 )
 
@@ -52,6 +58,7 @@ set(MATRYOSHKA_SOURCES
     src/tokenizer.cpp
     src/layer_norm.cpp
     src/mamba.cpp
+    src/transformer.cpp
     src/matryoshka_encoder.cpp
     src/matryoshka_trainer.cpp
     src/matryoshka_benchmark.cpp
@@ -63,6 +70,7 @@ set(HEADERS
     include/matryoshka_encoder.h
     include/tensor_ops.h
     include/tokenizer.h
+    include/hybrid_attention.h
 )
 
 # Create executables

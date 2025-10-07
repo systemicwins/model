@@ -113,8 +113,9 @@ Matrix MultiHeadAttention::forward(const Matrix& query,
     Matrix V = value * W_v_;
     V.rowwise() += RowVector(b_v_);
 
-    // Output placeholder
+    // Output placeholder (initialize to zero to make parallel writes safe)
     Matrix concatenated_heads(seq_len_q, embed_dim_);
+    concatenated_heads.setZero();
 
     // Process each head independently
     #pragma omp parallel for
@@ -229,8 +230,11 @@ Matrix GatedMultiHeadAttention::compute_gate(const Matrix& Q, const Matrix& K, c
     const int seq_len = Q.rows();
 
     // Compute gate projections directly on full matrices
-    Matrix Q_gate = Q * W_gate_q_.transpose() + b_gate_q_.transpose().replicate(seq_len, 1);
-    Matrix K_gate = K * W_gate_k_.transpose() + b_gate_k_.transpose().replicate(seq_len, 1);
+    // Using weight layout: W is in->out (input * W)
+    Matrix Q_gate = Q * W_gate_q_;
+    Q_gate.rowwise() += RowVector(b_gate_q_);
+    Matrix K_gate = K * W_gate_k_;
+    K_gate.rowwise() += RowVector(b_gate_k_);
 
     // Gate computation - sigmoid of linear combination
     // This controls which information flows through the attention
@@ -247,8 +251,9 @@ Matrix GatedMultiHeadAttention::apply_gate(const Matrix& attention_output, const
     Matrix gated_output = attention_output.cwiseProduct(gate);
 
     // Final gate output projection
-    Matrix final_output = gated_output * W_gate_out_.transpose() +
-                         b_gate_out_.transpose().replicate(gated_output.rows(), 1);
+    // Project final gated output using W_gate_out_ with in->out layout
+    Matrix final_output = gated_output * W_gate_out_;
+    final_output.rowwise() += RowVector(b_gate_out_);
 
     return final_output;
 }
@@ -315,16 +320,18 @@ Matrix GatedMultiHeadAttention::forward(const Matrix& query,
         throw std::runtime_error("Input embedding dimension mismatch in GatedMultiHeadAttention::forward");
     }
 
-    // Project to Q, K, V
-    Matrix Q = query * W_q_.transpose() + b_q_.transpose().replicate(query.rows(), 1);
-    Matrix K = key * W_k_.transpose() + b_k_.transpose().replicate(key.rows(), 1);
-    Matrix V = value * W_v_.transpose() + b_v_.transpose().replicate(value.rows(), 1);
+    // Project to Q, K, V using W as in->out
+    Matrix Q = query * W_q_;
+    Q.rowwise() += RowVector(b_q_);
+    Matrix K = key * W_k_;
+    K.rowwise() += RowVector(b_k_);
+    Matrix V = value * W_v_;
+    V.rowwise() += RowVector(b_v_);
 
-    // Apply multi-head attention with gating
+    // Apply gated attention and final projection (W_o_ uses in->out layout)
     Matrix output = compute_gated_attention(Q, K, V, mask);
-
-    // Concatenate all heads and apply final projection
-    output = output * W_o_.transpose() + b_o_.transpose().replicate(output.rows(), 1);
+    output = output * W_o_;
+    output.rowwise() += RowVector(b_o_);
 
     return output;
 }
