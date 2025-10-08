@@ -4,7 +4,6 @@
 #include "../include/layer_norm.h"
 #include "../include/tensor_ops.h"
 #include "../include/compact_positional_encoding_f32.h"
-#include "../include/hybrid_scan_sparse_attention.h"
 
 // Include GAM header (already included in attention.h)
 #include <Eigen/Dense>

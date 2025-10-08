@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <memory>
 #include <vector>
+#include "act_controller.h"
 
 namespace transformer {
 
@@ -126,6 +127,12 @@ public:
 
     Eigen::MatrixXf forward(const Eigen::MatrixXf& input, const Eigen::MatrixXf* mask = nullptr);
     void set_ssm_attention_balance(float balance);
+
+    // ACT-enabled forward pass
+    Eigen::MatrixXf forward_with_act(const Eigen::MatrixXf& input,
+                                   ACTController& act_controller,
+                                   bool is_training = true,
+                                   const Eigen::MatrixXf* mask = nullptr);
 
 private:
     HybridConfig config_;

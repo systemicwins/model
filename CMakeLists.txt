@@ -46,6 +46,7 @@ set(SOURCES
     src/mamba.cpp
     src/transformer.cpp
     src/hybrid_attention.cpp
+    src/act_controller.cpp
     src/attention_benchmark.cpp
     src/hybrid_attention_benchmark.cpp
     src/layer_comparison_benchmark.cpp
@@ -71,6 +72,7 @@ set(HEADERS
     include/tensor_ops.h
     include/tokenizer.h
     include/hybrid_attention.h
+    include/act_controller.h
 )
 
 # Create executables

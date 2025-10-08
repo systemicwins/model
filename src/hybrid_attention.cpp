@@ -254,8 +254,12 @@ Eigen::MatrixXf FusionGate::fuse(const SSMState& ssm_state,
 
 float FusionGate::compute_fusion_ratio(const Eigen::MatrixXf& input) {
     Eigen::VectorXf row_means = input.rowwise().mean();
-    Eigen::MatrixXf centered = input.rowwise() - row_means * Eigen::MatrixXf::Ones(1, input.cols());
-    Eigen::VectorXf row_vars = centered.rowwise().squaredNorm() / input.cols();
+    Eigen::VectorXf row_vars = Eigen::VectorXf::Zero(input.rows());
+
+    for (int i = 0; i < input.rows(); ++i) {
+        Eigen::VectorXf centered = input.row(i) - row_means(i) * Eigen::VectorXf::Ones(input.cols());
+        row_vars(i) = centered.squaredNorm() / input.cols();
+    }
 
     float avg_var = row_vars.mean();
     return 0.3f + 0.4f * std::tanh(avg_var * 10.0f);
@@ -305,6 +309,59 @@ Eigen::MatrixXf HybridAttention::forward(const Eigen::MatrixXf& input, const Eig
     output = output + output_bias_.transpose().replicate(output.rows(), 1);
 
     return output;
+}
+
+Eigen::MatrixXf HybridAttention::forward_with_act(const Eigen::MatrixXf& input,
+                                                ACTController& act_controller,
+                                                bool is_training,
+                                                const Eigen::MatrixXf* mask) {
+    Eigen::MatrixXf current_input = input;
+    Eigen::MatrixXf accumulated_output = Eigen::MatrixXf::Zero(input.rows(), input.cols());
+    Eigen::MatrixXf previous_output = Eigen::MatrixXf::Zero(input.rows(), input.cols());
+
+    int step = 0;
+    bool should_continue = true;
+
+    while (should_continue && step < 100) { // Safety limit to prevent infinite loops
+        // Forward pass for current step
+        Eigen::MatrixXf step_output = forward(current_input, mask);
+
+        // Accumulate output
+        accumulated_output += step_output;
+
+        // ACT decision making
+        ACTDecision decision = act_controller.make_decision(current_input, previous_output, step, is_training);
+
+        // Update previous output for next iteration
+        previous_output = step_output;
+
+        // Check if we should halt
+        if (decision.should_halt) {
+            should_continue = false;
+
+            // Update Q-values if training
+            if (is_training) {
+                float reward = act_controller.compute_reward(true, step + 1, decision.confidence_score);
+                act_controller.update_q_values(current_input, 1, reward, step_output);
+            }
+        } else {
+            // Update Q-values for continue decision if training
+            if (is_training) {
+                float reward = act_controller.compute_reward(false, step + 1, decision.confidence_score);
+                act_controller.update_q_values(current_input, 0, reward, step_output);
+            }
+
+            step++;
+            should_continue = (step < act_controller.get_current_epsilon()); // Simplified continuation logic
+        }
+
+        // Decay epsilon for exploration reduction
+        if (is_training) {
+            act_controller.decay_epsilon();
+        }
+    }
+
+    return accumulated_output / (step + 1); // Average the accumulated outputs
 }
 
 void HybridAttention::set_ssm_attention_balance(float balance) {
