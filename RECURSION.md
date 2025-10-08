@@ -1,42 +1,47 @@
-# Recursive Hybrid Architecture: SSM + Attention in Recursive Reasoning
+# Recursive Hybrid Architecture: FRED-First Context Reasoning
 
 ## Overview
 
-This document describes a novel recursive reasoning architecture that combines the "Less is More: Recursive Reasoning with Tiny Networks" paper with our existing SSM + Sparse Attention hybrid model. This creates a hierarchical recursive system where each level of recursion uses sophisticated hybrid processing instead of simple networks.
+This document describes a novel recursive reasoning architecture that combines the "Less is More: Recursive Reasoning with Tiny Networks" paper with our existing SSM + Sparse Attention hybrid model. This creates a **context-first recursive system** where economic context (FRED data) is processed first, then used to interpret market data, with recursive refinement between both domains.
 
 ## Core Innovation
 
-**Key Insight**: Instead of using simple neural networks at each recursion level (as in HRM/TRM), we use our full SSM + Sparse Attention hybrid architecture, creating a "recursive hybrid" model that maintains O(n√s) complexity while gaining multi-step reasoning capabilities.
+**Key Insight**: Markets operate within economic reality, not in isolation. We use our full SSM + Sparse Attention hybrid architecture in a **context-first design**:
+1. **Economic Context First**: Deep recursive analysis of FRED indicators establishes the economic foundation
+2. **Market Interpretation**: Market data interpreted within established economic context
+3. **Recursive Refinement**: Multi-step reasoning between economic context and market behavior
 
 ## Architecture Components
 
-### 1. Recursive Hybrid Layer
+### 1. Context-First Recursive Layer
 
-Each recursion level consists of:
-- **Sparse Attention**: O(n√s) selective focus on important tokens
-- **SSM Processing**: O(n) temporal state management
-- **Recursive Feedback**: Output fed back as input for next recursion level
+The architecture processes information in the correct causal order:
+- **Economic Context First**: FRED indicators establish the economic foundation
+- **Market Interpretation**: Market data interpreted within economic context
+- **Recursive Refinement**: Multi-step reasoning between economic and market domains
 
 ```cpp
-class RecursiveHybridLayer {
-    HybridAttention hybrid_attention;  // O(n√s) selective attention
-    SSM ssm_layer;                     // O(n) temporal processing
+class ContextFirstRecursiveModel {
+    // 1. Economic Context Foundation (FRED Data)
+    RecursiveHybridLayer economic_foundation;
 
-    Tensor forward(Tensor input, int recursion_depth) {
-        Tensor current_state = input;
+    // 2. Market Data Interpreter (Within Economic Context)
+    RecursiveHybridLayer market_interpreter;
 
-        for(int depth = 0; depth < recursion_depth; depth++) {
-            // Apply hybrid attention for selective focus
-            Tensor attended = hybrid_attention(current_state);
+    // 3. Cross-Domain Refinement
+    CrossContextAttention cross_attention;
 
-            // Apply SSM for temporal processing
-            Tensor temporal = ssm_layer(attended);
+    Tensor forward(Tensor economic_data, Tensor market_data) {
+        // Step 1: Establish economic context (FRED indicators)
+        Tensor economic_context = economic_foundation(economic_data);
 
-            // Recursive reasoning with residual connection
-            current_state = temporal + current_state;
-        }
+        // Step 2: Interpret market data within economic context
+        Tensor market_interpretation = market_interpreter(market_data, economic_context);
 
-        return current_state;
+        // Step 3: Recursive refinement between both domains
+        Tensor refined = cross_attention(economic_context, market_interpretation);
+
+        return refined;
     }
 };
 ```
@@ -91,25 +96,31 @@ class HierarchicalFinancialModel {
 
 ## Financial Applications
 
-### 1. Multi-Timescale Market Prediction
+### 1. Context-First Market Prediction
 
 ```python
-def recursive_hybrid_prediction(model, current_data, prediction_steps=30):
-    """Multi-step financial prediction with recursive hybrid reasoning"""
+def context_first_prediction(model, economic_data, market_data, prediction_steps=30):
+    """Multi-step financial prediction with economic context-first reasoning"""
 
     predictions = []
-    current_state = current_data
+    current_economic = economic_data
+    current_market = market_data
 
     for step in range(prediction_steps):
-        # Each prediction uses full recursive hybrid reasoning
-        prediction = model(current_state)
+        # Step 1: Update economic context understanding
+        economic_context = model.economic_foundation(current_economic)
+
+        # Step 2: Interpret market data within economic context
+        market_interpretation = model.market_interpreter(current_market, economic_context)
+
+        # Step 3: Generate prediction based on integrated understanding
+        prediction = model.predictor(market_interpretation)
+
         predictions.append(prediction)
 
-        # Feed prediction back for next step reasoning
-        current_state = torch.cat([
-            current_state[:, 1:, :],  # Slide window
-            prediction.unsqueeze(1)   # Add new prediction
-        ], dim=1)
+        # Step 4: Update states for next prediction
+        current_economic = update_economic_context(current_economic, prediction)
+        current_market = update_market_data(current_market, prediction)
 
     return torch.stack(predictions)
 ```
@@ -302,13 +313,89 @@ trend_model = RecursiveHybridLayer(depth=7);           // Long-term trends
 - **Medium-frequency recursion**: CPI, unemployment, GDP
 - **Low-frequency recursion**: Industrial production, housing starts
 
+## Corrected Reasoning Process: Why Economic Context Must Come First
+
+### The Economic Foundation Reality
+
+Markets operate within economic reality, establishing the proper causal order:
+
+1. **Economic Context First**: FRED indicators determine the "rules of the game"
+2. **Market Interpretation**: Price movements interpreted within economic context
+3. **Recursive Refinement**: Multi-step reasoning between economic and market domains
+
+### Why This Design is Superior
+
+#### 1. Causal Direction
+- **Economic factors** → **Market expectations** → **Price movements**
+- **Interest rates** determine borrowing costs → affects all valuations
+- **Inflation** affects purchasing power → impacts consumer behavior
+- **Employment** drives consumer spending → affects corporate earnings
+
+#### 2. Expert Financial Analysis Process
+1. **"What's the economic environment?"** (FRED data analysis)
+2. **"Given this environment, how should markets behave?"** (Theoretical expectation)
+3. **"How are markets actually behaving?"** (Empirical observation)
+4. **"Does behavior match theory? If not, why?"** (Gap analysis)
+5. **"What does this tell me about future expectations?"** (Forward-looking insight)
+
+### Implementation: Context-First Architecture
+
+```cpp
+class FREDContextFirstModel {
+    // 1. Economic Context Foundation (FRED Data FIRST)
+    RecursiveHybridLayer economic_foundation;
+
+    // 2. Market Data Interpreter (Within Economic Context)
+    RecursiveHybridLayer market_interpreter;
+
+    // 3. Cross-Domain Recursive Refinement
+    CrossContextAttention cross_attention;
+
+    Tensor forward(Tensor fred_data, Tensor market_data) {
+        // Step 1: Establish economic context (FRED indicators FIRST)
+        Tensor economic_context = economic_foundation(fred_data);
+
+        // Step 2: Interpret market data within economic context
+        Tensor market_interpretation = market_interpreter(market_data, economic_context);
+
+        // Step 3: Recursive refinement between both domains
+        Tensor refined = cross_attention(economic_context, market_interpretation);
+
+        return refined;
+    }
+};
+```
+
+### Financial Reasoning Example
+
+```python
+def expert_like_financial_reasoning(fred_data, market_data):
+    # Step 1: Deep economic context analysis (FRED data)
+    economic_context = analyze_economic_foundation(fred_data);
+
+    # Step 2: Determine theoretical market expectations
+    expected_behavior = theoretical_market_prediction(economic_context);
+
+    # Step 3: Observe actual market behavior
+    actual_behavior = observe_market_data(market_data);
+
+    # Step 4: Reconcile expectations vs reality
+    insights = reconcile_theory_vs_empirics(expected_behavior, actual_behavior);
+
+    # Step 5: Recursive refinement for deeper understanding
+    refined_insights = recursive_context_refinement(economic_context, insights);
+
+    return refined_insights;
+```
+
 ## Conclusion
 
-This recursive hybrid architecture represents a significant advancement in financial time series modeling by combining:
+This **FRED-first recursive hybrid architecture** represents a fundamental advancement in financial time series modeling by:
 
-1. **Recursive reasoning** for multi-step analysis
-2. **SSM efficiency** for temporal processing
-3. **Sparse attention** for selective focus
-4. **Financial optimization** for time series data
+1. **Correct Causal Reasoning**: Economic context before market interpretation
+2. **Recursive Reasoning** for multi-step analysis
+3. **SSM Efficiency** for temporal processing
+4. **Sparse Attention** for selective focus
+5. **Financial Optimization** for time series data
 
-The result is a powerful, efficient model that can reason about complex market dynamics across multiple timescales while maintaining computational tractability.
+The result is a powerful, efficient model that mirrors how financial experts actually think about markets - starting with economic fundamentals, then interpreting price action within that context, with recursive refinement to develop deeper insights.
