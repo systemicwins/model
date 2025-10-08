@@ -13,5 +13,14 @@ pandas>=2.0.0
 # Configuration
 python-dotenv>=1.0.0
 
+# IBM Granite Model Dependencies
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+
+# CoreML and macOS optimization
+coremltools>=7.0
+onnx>=1.14.0
+
 # Optional: For YugabyteDB
 # yugabyte-db>=2.18.0
