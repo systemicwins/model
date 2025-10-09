@@ -1,6 +1,6 @@
 # C++ Financial Prediction Model with ACT
 
-A state-of-the-art financial prediction system combining **Mamba2** state-space models, **Matryoshka encoding**, and **Adaptive Computational Time (ACT)** for efficient long-range sequence modeling and dynamic resource allocation.
+A state-of-the-art financial prediction system combining **Mamba2** state-space models, sparse attention, **Matryoshka encoding**, and **Adaptive Computational Time (ACT)** for efficient long-range sequence modeling and dynamic resource allocation.
 
 ## 🎯 Model Design Overview
 
