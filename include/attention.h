@@ -23,7 +23,6 @@ public:
 private:
     int embed_dim_;
     int num_heads_;
-    int head_dim_;
     float dropout_rate_;
     float scale_;
 
@@ -55,7 +54,6 @@ public:
 private:
     int embed_dim_;
     int num_heads_;
-    int head_dim_;
     float dropout_rate_;
     float scale_;
 

@@ -62,7 +62,6 @@ public:
             throw std::runtime_error("Input dimension mismatch");
         }
 
-        const int batch_size = 1;  // Can be extended for batch processing
         const int seq_len = input.rows();
         std::cout << "DEBUG: TransformerBlock - seq_len=" << seq_len << ", embed_dim=" << config_.embed_dim << std::endl;
         

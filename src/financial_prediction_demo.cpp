@@ -46,7 +46,7 @@ class ContextFirstFinancialDemo {
 public:
     // Load sample FRED economic data (synthetic but realistic patterns)
     static Matrix load_fred_economic_data(int sequence_length) {
-        Matrix data(sequence_length, 8); // 8 key economic indicators
+        Matrix data = Matrix::Zero(sequence_length, 8); // 8 key economic indicators
 
         // Simulate realistic economic indicator patterns
         for (int t = 0; t < sequence_length; ++t) {
@@ -80,7 +80,7 @@ public:
 
     // Load sample market data that responds to economic conditions
     static Matrix load_market_data(int sequence_length) {
-        Matrix data(sequence_length, 5); // [Open, High, Low, Close, Volume]
+        Matrix data = Matrix::Zero(sequence_length, 5); // [Open, High, Low, Close, Volume]
 
         // Generate market data that responds to economic conditions
         float price = 100.0f;

@@ -130,8 +130,8 @@ void process_text(const std::string& text, bool full_process = true) {
             int seq_len = embeddings.size();
             int embed_dim = embeddings[0].size();
             Eigen::MatrixXf output_matrix(seq_len, embed_dim);
-            for (int i = 0; i < seq_len && i * embed_dim < output.size(); ++i) {
-                for (int j = 0; j < embed_dim && i * embed_dim + j < output.size(); ++j) {
+            for (size_t i = 0; i < static_cast<size_t>(seq_len) && i * embed_dim < output.size(); ++i) {
+                for (size_t j = 0; j < static_cast<size_t>(embed_dim) && i * embed_dim + j < output.size(); ++j) {
                     output_matrix(i, j) = output[i * embed_dim + j];
                 }
             }
@@ -143,7 +143,6 @@ void process_text(const std::string& text, bool full_process = true) {
             }
             std::cout << "\n";
         }
-        
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
     }
@@ -185,8 +184,8 @@ void process_batch(const std::vector<std::string>& texts) {
         int seq_len = all_embeddings.size();
         int embed_dim = 1536;
         Eigen::MatrixXf output_matrix(seq_len, embed_dim);
-        for (int i = 0; i < seq_len && i * embed_dim < output.size(); ++i) {
-            for (int j = 0; j < embed_dim && i * embed_dim + j < output.size(); ++j) {
+        for (size_t i = 0; i < static_cast<size_t>(seq_len) && i * embed_dim < output.size(); ++i) {
+            for (size_t j = 0; j < static_cast<size_t>(embed_dim) && i * embed_dim + j < output.size(); ++j) {
                 output_matrix(i, j) = output[i * embed_dim + j];
             }
         }

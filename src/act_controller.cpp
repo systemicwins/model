@@ -237,7 +237,7 @@ float ACTController::compute_confidence(const Eigen::MatrixXf& current_state,
     return 0.5f; // Default confidence
 }
 
-float ACTController::compute_reward(bool halted_early, int steps_used, float confidence) {
+float ACTController::compute_reward(bool halted_early, int steps_used, float confidence) const {
     // Reward function for ACT
     float efficiency_reward = (config_.max_steps - steps_used) / static_cast<float>(config_.max_steps);
     float confidence_reward = confidence;

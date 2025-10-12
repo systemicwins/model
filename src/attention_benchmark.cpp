@@ -179,8 +179,8 @@ private:
             std_time,
             estimate_memory_usage(static_cast<int>(input.rows()), static_cast<int>(input.cols())),
             output.norm(),
-            input.rows(),
-            input.cols()
+            static_cast<int>(input.rows()),
+            static_cast<int>(input.cols())
         };
     }
 

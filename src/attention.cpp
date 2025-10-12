@@ -6,7 +6,6 @@ namespace transformer {
 MultiHeadAttention::MultiHeadAttention(int embed_dim, int num_heads, float dropout_rate)
     : embed_dim_(embed_dim),
       num_heads_(num_heads),
-      head_dim_(embed_dim / num_heads),
       dropout_rate_(dropout_rate),
       scale_(1.0f / std::sqrt(static_cast<float>(embed_dim / num_heads))) {
     if (embed_dim_ % num_heads_ != 0) {
@@ -53,7 +52,7 @@ Matrix MultiHeadAttention::apply_dropout(const Matrix& input) {
 Matrix MultiHeadAttention::scaled_dot_product_attention(const Matrix& Q,
                                                         const Matrix& K,
                                                         const Matrix& V,
-                                                        const Matrix* mask) {
+                                                        [[maybe_unused]] const Matrix* mask) {
     // Q, K, V shapes: [seq_len, head_dim]
     Matrix scores = (Q * K.transpose()) * scale_;
 
@@ -103,7 +102,6 @@ Matrix MultiHeadAttention::forward(const Matrix& query,
     }
 
     const int seq_len_q = query.rows();
-    const int seq_len_kv = key.rows();
 
     // Linear projections
     Matrix Q = query * W_q_;
@@ -120,17 +118,18 @@ Matrix MultiHeadAttention::forward(const Matrix& query,
     // Process each head independently
     #pragma omp parallel for
     for (int h = 0; h < num_heads_; ++h) {
-        const int col_start = h * head_dim_;
+        const int head_dim = embed_dim_ / num_heads_;
+        const int col_start = h * head_dim;
         // Slice head-specific projections
-        Matrix Q_h = Q.middleCols(col_start, head_dim_);
-        Matrix K_h = K.middleCols(col_start, head_dim_);
-        Matrix V_h = V.middleCols(col_start, head_dim_);
+        Matrix Q_h = Q.middleCols(col_start, head_dim);
+        Matrix K_h = K.middleCols(col_start, head_dim);
+        Matrix V_h = V.middleCols(col_start, head_dim);
 
         // Compute attention for this head
         Matrix head_out = scaled_dot_product_attention(Q_h, K_h, V_h, mask);
 
         // Write head output back
-        concatenated_heads.middleCols(col_start, head_dim_) = head_out;
+        concatenated_heads.middleCols(col_start, head_dim) = head_out;
     }
 
     // Final output projection
@@ -150,7 +149,6 @@ Matrix MultiHeadAttention::forward(const Matrix& query,
 GatedMultiHeadAttention::GatedMultiHeadAttention(int embed_dim, int num_heads, float dropout_rate)
     : embed_dim_(embed_dim),
       num_heads_(num_heads),
-      head_dim_(embed_dim / num_heads),
       dropout_rate_(dropout_rate),
       scale_(1.0f / std::sqrt(static_cast<float>(embed_dim / num_heads))) {
 
@@ -224,10 +222,9 @@ void GatedMultiHeadAttention::initialize_weights() {
     b_gate_out_.setZero();
 }
 
-Matrix GatedMultiHeadAttention::compute_gate(const Matrix& Q, const Matrix& K, const Matrix& V) {
+Matrix GatedMultiHeadAttention::compute_gate([[maybe_unused]] const Matrix& Q, const Matrix& K, [[maybe_unused]] const Matrix& V) {
     // Compute gate projections using full matrices
     // Q, K, V are full embedding dimension matrices (not head-split)
-    const int seq_len = Q.rows();
 
     // Compute gate projections directly on full matrices
     // Using weight layout: W is in->out (input * W)

@@ -446,11 +446,11 @@ bool TensorValidation::has_inf(const Matrix& mat) {
 std::unordered_map<std::string, double> TensorProfiler::timings_;
 std::unordered_map<std::string, int> TensorProfiler::counts_;
 
-void TensorProfiler::start_timer(const std::string& name) {
+void TensorProfiler::start_timer(const std::string& /*name*/) {
     // Implementation would use high_resolution_clock
 }
 
-void TensorProfiler::end_timer(const std::string& name) {
+void TensorProfiler::end_timer(const std::string& /*name*/) {
     // Implementation would calculate elapsed time
 }
 
@@ -472,7 +472,7 @@ Matrix FlashAttention::forward(
     const Matrix& V,
     int num_heads,
     bool is_causal,
-    Scalar dropout_p) {
+    Scalar /*dropout_p*/) {
     
     const int seq_len = Q.rows();
     const int embed_dim = Q.cols();

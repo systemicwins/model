@@ -88,7 +88,8 @@ private:
                            const Eigen::MatrixXf& previous_output);
 
     // Compute reward for halting decision
-    float compute_reward(bool halted_early, int steps_used, float confidence);
+public:
+    float compute_reward(bool halted_early, int steps_used, float confidence) const;
 
     // Initialize Q-network parameters
     void initialize_q_network();

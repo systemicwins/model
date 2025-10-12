@@ -8,10 +8,66 @@
 #include <Eigen/Dense>
 #include "tensor_ops.h"
 
+namespace transformer {
+
+// Forward declarations and type definitions
+class TransformerBlock;
+class TransformerModel;
+
+// Transformer configuration
+struct TransformerConfig {
+    int embed_dim = 768;
+    int num_heads = 12;
+    int num_layers = 12;
+    int ff_dim = 3072;
+    float dropout_rate = 0.1f;
+    int max_seq_length = 512;
+    float layer_norm_eps = 1e-5f;
+    bool gradient_checkpointing = false;
+};
+
+// Main transformer classes
+class TransformerBlock {
+public:
+    TransformerBlock(const TransformerConfig& config);
+    ~TransformerBlock();
+
+    Matrix forward(const Matrix& input, const Matrix* mask = nullptr);
+
+private:
+    class TransformerBlockImpl;
+    std::unique_ptr<TransformerBlockImpl> pImpl;
+    TransformerConfig config_;
+};
+
+class TransformerModel {
+public:
+    explicit TransformerModel(const TransformerConfig& config = TransformerConfig());
+    ~TransformerModel();
+
+    Matrix forward(const Matrix& embeddings, const Matrix* mask = nullptr);
+    Matrix get_embeddings_at_dimension(const Matrix& input, int target_dim);
+    std::vector<float> encode(const std::vector<std::vector<float>>& embeddings);
+    Vector get_pooled_output(const Matrix& encoded, const std::string& pooling_method = "mean");
+    void save_weights(const std::string& filepath);
+    void load_weights(const std::string& filepath);
+
+private:
+    class TransformerModelImpl;
+    std::unique_ptr<TransformerModelImpl> pImpl;
+    TransformerConfig config_;
+};
+
+} // namespace transformer
+
 namespace mamba {
 
 // Import tensor types from transformer namespace for convenience
 using transformer::Scalar;
+using transformer::Matrix;
+using transformer::Vector;
+using transformer::Tensor3D;
+using transformer::Tensor4D;
 
 class LayerNorm;
 

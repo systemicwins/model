@@ -1,4 +1,4 @@
-#include "matryoshka_encoder.h"
+#include "../include/matryoshka_encoder.h"
 #include <cmath>
 #include <random>
 #include <algorithm>
@@ -9,6 +9,10 @@
 #ifdef _OPENMP
 #include <omp.h>  // For parallel processing
 #endif
+
+// Forward declarations
+class Matrix;
+class Vector;
 
 namespace matryoshka {
 
@@ -755,6 +759,23 @@ void MatryoshkaBenchmark::generate_report(
     }
     
     file.close();
+}
+
+// Helper functions for matrix serialization
+void save_matrix(std::ofstream& file, const Matrix& matrix) {
+    int rows = matrix.rows();
+    int cols = matrix.cols();
+    file.write(reinterpret_cast<const char*>(&rows), sizeof(rows));
+    file.write(reinterpret_cast<const char*>(&cols), sizeof(cols));
+    file.write(reinterpret_cast<const char*>(matrix.data()), sizeof(float) * rows * cols);
+}
+
+void load_matrix(std::ifstream& file, Matrix& matrix) {
+    int rows, cols;
+    file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+    file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+    matrix = Matrix(rows, cols);
+    file.read(reinterpret_cast<char*>(matrix.data()), sizeof(float) * rows * cols);
 }
 
 } // namespace matryoshka
