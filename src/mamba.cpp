@@ -1,4 +1,4 @@
-#include "mamba.h"
+#include "../include/transformer.h"
 #include <algorithm>
 #include <fstream>
 #include <numeric>
@@ -6,15 +6,67 @@
 
 namespace mamba {
 
-// Minimal MambaBlock implementation to satisfy linker
+// MambaBlock implementation with continuous SSM view
 MambaBlock::MambaBlock(const MambaConfig& config)
-    : config_(config) {}
+    : config_(config) {
+    // Initialize SSM parameters for continuous-time view
+    A_ = transformer::Matrix::Random(config_.state_dim, config_.state_dim) * 0.1f;
+    B_ = transformer::Matrix::Random(config_.embed_dim, config_.state_dim) * 0.1f;
+    C_ = transformer::Matrix::Random(config_.state_dim, config_.embed_dim) * 0.1f;
+    D_ = transformer::Matrix::Random(config_.embed_dim, config_.embed_dim) * 0.1f;
+    conv_weight_ = transformer::Matrix::Random(config_.embed_dim, config_.conv_kernel_size) * 0.1f;
+    gate_proj_ = transformer::Matrix::Random(config_.embed_dim, config_.embed_dim) * 0.1f;
+}
 
 MambaBlock::~MambaBlock() = default;
 
 transformer::Matrix MambaBlock::forward(const transformer::Matrix& input,
-                                        const transformer::Matrix* /*mask*/) {
-    return input;
+                                         const transformer::Matrix* /*mask*/) {
+    const int seq_len = input.rows();
+    const int embed_dim = input.cols();
+
+    // Apply convolution for local mixing
+    transformer::Matrix conv_out = transformer::Matrix::Zero(seq_len, embed_dim);
+    for (int t = 0; t < seq_len; ++t) {
+        for (int k = 0; k < config_.conv_kernel_size; ++k) {
+            int idx = t - k;
+            if (idx >= 0) {
+                conv_out.row(t) += input.row(idx) * conv_weight_.col(k);
+            }
+        }
+    }
+
+    // Initialize hidden state
+    transformer::Matrix hidden_state = transformer::Matrix::Zero(seq_len, config_.state_dim);
+
+    // Continuous-time SSM forward pass
+    for (int t = 0; t < seq_len; ++t) {
+        // Compute delta_t for this timestep (learnable parameter)
+        float delta_t = config_.ssm_dt_init * config_.ssm_dt_scale;
+
+        // Discretize continuous-time SSM
+        transformer::Matrix A_discrete = transformer::Matrix::Identity(config_.state_dim, config_.state_dim) + A_ * delta_t;
+
+        // SSM step: h_t = A_discrete * h_{t-1} + B * x_t
+        if (t == 0) {
+            hidden_state.row(t) = (B_.transpose() * conv_out.row(t).transpose()).transpose();
+        } else {
+            hidden_state.row(t) = (A_discrete * hidden_state.row(t-1).transpose()).transpose() +
+                                  (B_.transpose() * conv_out.row(t).transpose()).transpose();
+        }
+    }
+
+    // Output projection: y_t = C * h_t + D * x_t
+    transformer::Matrix output = transformer::Matrix::Zero(seq_len, embed_dim);
+    for (int t = 0; t < seq_len; ++t) {
+        output.row(t) = (C_ * hidden_state.row(t).transpose()).transpose() + (D_ * conv_out.row(t));
+    }
+
+    // Apply gating (Swish activation)
+    transformer::Matrix gate = conv_out * gate_proj_;
+    transformer::Matrix gated = output.array() * gate.unaryExpr([](float x) { return x * (1.0f / (1.0f + std::exp(-x))); }).array();
+
+    return gated;
 }
 
 void MambaBlock::set_training(bool /*training*/) {}
