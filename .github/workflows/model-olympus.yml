@@ -52,7 +52,13 @@ jobs:
           find /usr -name "Eigen3Config.cmake"
 
       - name: Configure with HIP enabled
-        run: cmake -S . -B build -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
+        run: |
+          export ROCM_PATH=/opt/rocm
+          export HIP_PATH=/opt/rocm
+          export PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
+          export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
+          export CMAKE_PREFIX_PATH=/opt/rocm:$CMAKE_PREFIX_PATH
+          cmake -S . -B build -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build --config Release --parallel

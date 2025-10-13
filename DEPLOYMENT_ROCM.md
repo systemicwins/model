@@ -142,7 +142,6 @@ relentless-financial.gguf
 
 ### Performance Tuning
 ```bash
-# Optimal settings for AMD RX 7900 XTX
 HSA_OVERRIDE_GFX_VERSION=11.0.0  # GFX11 architecture
 HIP_VISIBLE_DEVICES=0             # Use first GPU
 --ctx-size 8191                   # Max context

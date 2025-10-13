@@ -538,6 +538,7 @@ private:
     
     // Matryoshka encoder for multi-scale representations
     // TODO: Enable when matryoshka_encoder.cpp is implemented
+    // TODO: Fix build
     // std::unique_ptr<matryoshka::MatryoshkaEncoder> matryoshka_encoder_;
 };
 

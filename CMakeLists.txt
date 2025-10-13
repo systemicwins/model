@@ -1,19 +1,46 @@
 cmake_minimum_required(VERSION 3.14)
+
+# HIP support is optional; enable via -DENABLE_HIP=ON when building on systems with ROCm
+option(ENABLE_HIP "Enable HIP/ROCm GPU acceleration" OFF)
+
+# Set HIP compiler if HIP is enabled (must be set before project() declaration)
+if(ENABLE_HIP)
+    set(CMAKE_HIP_COMPILER "/opt/rocm-7.0.0/bin/hipcc" CACHE FILEPATH "HIP compiler")
+    set(CMAKE_CXX_COMPILER "/opt/rocm-7.0.0/bin/hipcc" CACHE FILEPATH "C++ compiler")
+endif()
+
 project(MambaModel VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# HIP support is optional; enable via -DENABLE_HIP=ON when building on systems with ROCm
-option(ENABLE_HIP "Enable HIP/ROCm GPU acceleration" OFF)
-
 if(ENABLE_HIP)
-    find_package(hip REQUIRED)
-    # Try to find optional ROCm libs; don't fail CMake if missing
-    find_package(hipblas QUIET)
-    find_package(hipfft QUIET)
-    find_package(rocrand QUIET)
+    # Manual HIP configuration for ROCm
+    set(HIP_PATH "/opt/rocm-7.0.0" CACHE PATH "HIP installation path")
+    set(CMAKE_HIP_COMPILER "${HIP_PATH}/bin/hipcc")
+
+    # Check if HIP compiler exists
+    if(EXISTS "${CMAKE_HIP_COMPILER}")
+        message(STATUS "Found HIP compiler: ${CMAKE_HIP_COMPILER}")
+        set(HIP_FOUND TRUE)
+
+        # Set HIP as the C++ compiler when HIP is enabled
+        set(CMAKE_CXX_COMPILER "${CMAKE_HIP_COMPILER}")
+
+        # Add HIP include directories
+        include_directories("${HIP_PATH}/include")
+        include_directories("${HIP_PATH}/include/hip")
+
+        # Try to find optional ROCm libs; don't fail CMake if missing
+        find_package(hipblas QUIET)
+        find_package(hipfft QUIET)
+        find_package(rocrand QUIET)
+    else()
+        message(WARNING "HIP compiler not found at ${CMAKE_HIP_COMPILER}. Building without HIP support.")
+        set(HIP_FOUND FALSE)
+        set(ENABLE_HIP OFF)
+    endif()
 endif()
 
 # Find required packages
@@ -87,6 +114,15 @@ target_include_directories(mamba_model PRIVATE
     ${EIGEN3_INCLUDE_DIR}
 )
 
+if(ENABLE_HIP)
+    target_include_directories(mamba_model PRIVATE
+        ${HIP_PATH}/include
+        ${HIP_PATH}/include/hipblas
+        ${HIP_PATH}/include/hipfft
+        ${HIP_PATH}/include/rocrand
+    )
+endif()
+
 
 # Link libraries
 set(MAMBA_LINK_LIBS
@@ -138,9 +174,11 @@ if(ENABLE_HIP)
     target_compile_definitions(mamba_model PRIVATE HIP_ENABLED)
 endif()
 
-# Enable warnings
+# Enable warnings (suppress known false positives from Eigen3)
 target_compile_options(mamba_model PRIVATE
     -Wall
     -Wextra
     -Wpedantic
+    -Wno-array-bounds        # Suppress false positive array bounds warnings in Eigen3 AVX code
+    -Wno-maybe-uninitialized # Suppress false positive uninitialized variable warnings in Eigen3 templates
 )
