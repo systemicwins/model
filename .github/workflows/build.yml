@@ -64,10 +64,12 @@ jobs:
       - name: Install HIP runtime
         run: |
           # Install HIP runtime package if not available
-          if [ ! -d /opt/rocm/hip ]; then
+          if [ ! -d /opt/rocm/include/hip ]; then
             echo "Installing HIP runtime package..."
             # For Ubuntu/Debian systems:
             sudo apt-get update && sudo apt-get install -y hip-runtime-amd
+          else
+            echo "HIP runtime already available in container"
           fi
 
       - name: Configure (HIP)
@@ -75,16 +77,12 @@ jobs:
           CMAKE_PREFIX_PATH: ${{ env.CMAKE_PREFIX_PATH }}
         run: |
           rm -rf build
+          # Set HIP compiler before project() declaration via environment
+          export CMAKE_HIP_COMPILER=/opt/rocm/bin/hipcc
+          export CMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=/opt/rocm/bin/hipcc \
-            -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
-            -DCMAKE_CXX_FLAGS="--rocm-path=/opt/rocm" \
-            -DENABLE_HIP=ON \
-            -Dhip_DIR=${{ env.hip_DIR }} \
-            -Dhipblas_DIR=${{ env.hipblas_DIR }} \
-            -Dhipfft_DIR=${{ env.hipfft_DIR }} \
-            -Drocrand_DIR=${{ env.rocrand_DIR }}
+            -DENABLE_HIP=ON
 
       - name: Build (HIP)
         env:
