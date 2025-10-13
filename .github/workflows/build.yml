@@ -77,12 +77,11 @@ jobs:
           CMAKE_PREFIX_PATH: ${{ env.CMAKE_PREFIX_PATH }}
         run: |
           rm -rf build
-          # Set HIP compiler before project() declaration via environment
-          export CMAKE_HIP_COMPILER=/opt/rocm/bin/hipcc
-          export CMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc
+          # Set HIP compiler in CMakeLists.txt before project() declaration
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DENABLE_HIP=ON
+            -DENABLE_HIP=ON \
+            -DCMAKE_HIP_COMPILER=/opt/rocm/bin/hipcc
 
       - name: Build (HIP)
         env:
