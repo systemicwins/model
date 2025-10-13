@@ -84,8 +84,7 @@ target_compile_definitions(mamba_model PRIVATE MAX_SEQUENCE_LENGTH=100000)
 target_include_directories(mamba_model PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CURL_INCLUDE_DIRS}
-    /opt/homebrew/include
-    /opt/homebrew/include/eigen3
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 
@@ -119,19 +118,6 @@ target_link_libraries(mamba_model PRIVATE ${MAMBA_LINK_LIBS})
 # Prefer CMake's OpenMP package; on AppleClang fall back to libomp if necessary.
 if(OpenMP_CXX_FOUND)
     target_link_libraries(mamba_model PRIVATE OpenMP::OpenMP_CXX)
-else()
-    message(STATUS "OpenMP not found via CMake; using Homebrew libomp")
-    # Use Homebrew libomp for AppleClang
-    set(HOMEBREW_PREFIX "/opt/homebrew")
-    if(EXISTS "${HOMEBREW_PREFIX}/lib/libomp.dylib")
-        target_include_directories(mamba_model PRIVATE "${HOMEBREW_PREFIX}/include")
-        target_link_directories(mamba_model PRIVATE "${HOMEBREW_PREFIX}/lib")
-        target_compile_options(mamba_model PRIVATE -Xpreprocessor -fopenmp)
-        target_link_libraries(mamba_model PRIVATE omp)
-        message(STATUS "Using Homebrew libomp from ${HOMEBREW_PREFIX}")
-    else()
-        message(WARNING "libomp not found in Homebrew prefix; building without OpenMP")
-    endif()
 endif()
 
 if(ENABLE_HIP)
