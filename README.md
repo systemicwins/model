@@ -419,7 +419,7 @@ jobs:
 ```
 
 **Features:**
-- ✅ **Self-hosted runner** with AMD GPUs (7950X3D CPU + 7900XTX GPU)
+- ✅ **Self-hosted runner** with AMD GPUs (7950X3D CPU + Radeon 7600 GPU)
 - ✅ **ROCm 5.7 container** for GPU acceleration
 - ✅ **Device pass-through** for both discrete and integrated GPUs
 - ✅ **HIP compilation** for AMD GPU optimization
@@ -429,7 +429,7 @@ jobs:
 
 **Hardware Configuration:**
 - **CPU:** AMD Ryzen 9 7950X3D (16 cores, 32 threads)
-- **GPU:** AMD Radeon RX 7900 XTX (24GB VRAM)
+- **GPU:** AMD Radeon RX 7600 (8GB VRAM)
 - **iGPU:** AMD Radeon Graphics (integrated)
 - **RAM:** 64GB DDR5
 - **Storage:** NVMe SSD
@@ -456,8 +456,8 @@ docker run --rm -it \
 rocminfo | grep -E "^\s+Name|^\s+Device"
 
 # Expected output:
-# Device: Radeon RX 7900 XTX
-# Device: AMD Ryzen 9 7900X with Radeon Graphics
+# Device: Radeon RX 7600
+# Device: AMD Ryzen 9 5950X3D with Radeon Graphics
 ```
 
 ## 🔬 Research Contributions
