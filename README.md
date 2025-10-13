@@ -505,6 +505,7 @@ rocminfo | grep -E "^\s+Name|^\s+Device"
 - ✅ **Warning suppression** for clean CI output
 - ✅ **Cross-platform compatibility** (Ubuntu + ROCm)
 - ✅ **GitHub Actions test** - Latest workflow validation
+- ✅ **Eigen3 dependency** resolved in ubuntu-latest runner
 
 ### Performance Optimizations
 - ✅ **Eigen3 warnings eliminated** for cleaner builds
