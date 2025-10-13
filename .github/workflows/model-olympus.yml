@@ -39,7 +39,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install build tooling inside container
+      - name: Install build tooling and locate Eigen3
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -48,6 +48,8 @@ jobs:
             git \
             libcurl4-openssl-dev \
             libeigen3-dev
+          echo "Searching for Eigen3Config.cmake..."
+          find /usr -name "Eigen3Config.cmake"
 
       - name: Configure with HIP enabled
         run: cmake -S . -B build -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
