@@ -497,4 +497,19 @@ rocminfo | grep -E "^\s+Name|^\s+Device"
 
 ---
 
+## 🔄 Recent Updates
+
+### GitHub Actions Integration (Latest)
+- ✅ **HIP/ROCm GPU builds** working on olympus runner
+- ✅ **CPU builds** verified on ubuntu-latest
+- ✅ **Warning suppression** for clean CI output
+- ✅ **Cross-platform compatibility** (Ubuntu + ROCm)
+
+### Performance Optimizations
+- ✅ **Eigen3 warnings eliminated** for cleaner builds
+- ✅ **HIP compiler detection** fixed for GPU acceleration
+- ✅ **CMake configuration** optimized for both CPU and GPU builds
+
+---
+
 *This model represents a significant advancement in financial prediction technology, combining state-space models, adaptive computation, and economic context awareness for superior performance and efficiency.*
