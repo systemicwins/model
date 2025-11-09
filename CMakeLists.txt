@@ -58,9 +58,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(json)
 
 # Eigen for linear algebra operations
-find_package(Eigen3 3.4 REQUIRED)
-if(Eigen3_FOUND)
-    message(STATUS "Found Eigen3: ${EIGEN3_INCLUDE_DIR}")
+# Using manual configuration for header-only Eigen3
+set(EIGEN3_INCLUDE_DIR "/tmp/eigen-3.4.0")
+if(EXISTS "${EIGEN3_INCLUDE_DIR}")
+    message(STATUS "Found Eigen3 at: ${EIGEN3_INCLUDE_DIR}")
+    set(Eigen3_FOUND TRUE)
+else()
+    message(FATAL_ERROR "Eigen3 not found at ${EIGEN3_INCLUDE_DIR}")
 endif()
 
 # Add source files
@@ -110,12 +114,16 @@ add_executable(mamba_model ${SOURCES})
 add_executable(test_sparse_attention test_sparse_attention.cpp)
 target_compile_definitions(mamba_model PRIVATE MAX_SEQUENCE_LENGTH=100000)
 target_compile_definitions(test_sparse_attention PRIVATE MAX_SEQUENCE_LENGTH=100000)
+target_include_directories(test_sparse_attention PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    /tmp/eigen-3.4.0
+)
 
 # Include directories
 target_include_directories(mamba_model PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CURL_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIR}
+    /tmp/eigen-3.4.0
 )
 
 if(ENABLE_HIP)
@@ -133,7 +141,6 @@ set(MAMBA_LINK_LIBS
     ${CURL_LIBRARIES}
     Threads::Threads
     nlohmann_json::nlohmann_json
-    Eigen3::Eigen
 )
 
 if(ENABLE_HIP)
@@ -157,6 +164,10 @@ target_link_libraries(mamba_model PRIVATE ${MAMBA_LINK_LIBS})
 
 # Link libraries for test executable
 target_link_libraries(test_sparse_attention PRIVATE ${MAMBA_LINK_LIBS})
+target_include_directories(test_sparse_attention PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    /tmp/eigen-3.4.0
+)
 
 # OpenMP configuration
 # Prefer CMake's OpenMP package; on AppleClang fall back to libomp if necessary.
