@@ -72,6 +72,7 @@ set(SOURCES
     src/transformer.cpp  # Uncommented - all dependencies appear to be available
     src/attention.cpp  # Uncommented - required by transformer.cpp
     src/feedforward.cpp  # Uncommented - required by transformer.cpp
+    src/sparse_attention.cpp  # SSM-guided sparse attention implementation
     # src/hybrid_attention.cpp  # Commented out due to compute_reward access issues
     # src/act_controller.cpp  # Commented out due to Eigen issues
     # src/attention_benchmark.cpp  # Commented out due to Eigen issues
@@ -101,11 +102,14 @@ set(HEADERS
     include/tokenizer.h
     include/hybrid_attention.h
     include/act_controller.h
+    include/sparse_attention.h  # SSM-guided sparse attention header
 )
 
 # Create executables
 add_executable(mamba_model ${SOURCES})
+add_executable(test_sparse_attention test_sparse_attention.cpp)
 target_compile_definitions(mamba_model PRIVATE MAX_SEQUENCE_LENGTH=100000)
+target_compile_definitions(test_sparse_attention PRIVATE MAX_SEQUENCE_LENGTH=100000)
 
 # Include directories
 target_include_directories(mamba_model PRIVATE
@@ -148,7 +152,11 @@ if(ENABLE_HIP)
     endif()
 endif()
 
+# Link libraries for main executable
 target_link_libraries(mamba_model PRIVATE ${MAMBA_LINK_LIBS})
+
+# Link libraries for test executable
+target_link_libraries(test_sparse_attention PRIVATE ${MAMBA_LINK_LIBS})
 
 # OpenMP configuration
 # Prefer CMake's OpenMP package; on AppleClang fall back to libomp if necessary.
