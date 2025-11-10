@@ -15,11 +15,7 @@ enum class SSMHeadType {
     GENERAL,          // General purpose processing
     FINANCIAL_PRICE,  // Financial price volatility
     FINANCIAL_VOLUME, // Volume change patterns
-    FINANCIAL_SENTIMENT, // Market sentiment shifts
-    MEDICAL_SIGNAL,   // Medical monitoring data
-    MEDICAL_ANOMALY,  // Anomaly detection
-    IOT_SENSOR,       // IoT sensor data
-    IOT_EVENT         // Event-driven sensor data
+    FINANCIAL_SENTIMENT // Market sentiment shifts
 };
 
 // State change metrics
@@ -58,8 +54,6 @@ struct SparseAttentionConfig {
     
     // Domain-specific configurations
     bool is_financial_data = false;
-    bool is_medical_data = false;
-    bool is_iot_data = false;
     
     // Adaptation settings
     bool enable_adaptive_thresholds = true;
@@ -77,8 +71,6 @@ private:
     
     // Domain-specific parameters
     std::vector<float> financial_volatility_thresholds;
-    std::vector<float> medical_anomaly_thresholds;
-    std::vector<float> iot_event_thresholds;
     
 public:
     SSMSparseAttention(const SparseAttentionConfig& config = SparseAttentionConfig());
@@ -112,11 +104,9 @@ public:
     
     // Get current state of the sparse attention system
     SparseAttentionConfig get_config() const { return config; }
-    void set_config(const SparseAttentionConfig& new_config) { 
-        config = new_config; 
+    void set_config(const SparseAttentionConfig& new_config) {
+        config = new_config;
         if (config.is_financial_data) initialize_financial_parameters();
-        if (config.is_medical_data) initialize_medical_parameters();
-        if (config.is_iot_data) initialize_iot_parameters();
     }
     
     // Reset internal state (for new sequences)
@@ -142,8 +132,6 @@ private:
     
     // Domain-specific initialization
     void initialize_financial_parameters();
-    void initialize_medical_parameters();
-    void initialize_iot_parameters();
     
     // State history management
     void update_state_history(const StateChangeMetrics& metrics);

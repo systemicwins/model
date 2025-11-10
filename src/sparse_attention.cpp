@@ -26,10 +26,6 @@ SSMSparseAttention::SSMSparseAttention(const SparseAttentionConfig& config)
     // Initialize domain-specific parameters
     if (config.is_financial_data) {
         initialize_financial_parameters();
-    } else if (config.is_medical_data) {
-        initialize_medical_parameters();
-    } else if (config.is_iot_data) {
-        initialize_iot_parameters();
     }
     
     std::cout << "SSMSparseAttention initialized with " 
@@ -153,14 +149,8 @@ std::vector<Matrix> SSMSparseAttention::forward_multihead(
                 // Financial data processing
                 break;
                 
-            case SSMHeadType::MEDICAL_SIGNAL:
-            case SSMHeadType::MEDICAL_ANOMALY:
-                // Medical data processing
-                break;
-                
-            case SSMHeadType::IOT_SENSOR:
-            case SSMHeadType::IOT_EVENT:
-                // IoT data processing
+            default:
+                // General processing
                 break;
                 
             default:
@@ -246,20 +236,6 @@ void SSMSparseAttention::initialize_financial_parameters() {
     // Initialize financial-specific thresholds
     financial_volatility_thresholds = {0.1f, 0.3f, 0.5f, 0.7f};
     std::cout << "Initialized financial parameters for sparse attention" << std::endl;
-}
-
-// Medical parameter initialization
-void SSMSparseAttention::initialize_medical_parameters() {
-    // Initialize medical-specific thresholds
-    medical_anomaly_thresholds = {0.05f, 0.15f, 0.25f, 0.4f};
-    std::cout << "Initialized medical parameters for sparse attention" << std::endl;
-}
-
-// IoT parameter initialization
-void SSMSparseAttention::initialize_iot_parameters() {
-    // Initialize IoT-specific thresholds
-    iot_event_thresholds = {0.02f, 0.08f, 0.15f, 0.3f};
-    std::cout << "Initialized IoT parameters for sparse attention" << std::endl;
 }
 
 // State history management

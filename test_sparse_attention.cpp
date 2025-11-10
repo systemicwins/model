@@ -148,8 +148,8 @@ void test_multihead_processing() {
     vector<SSMHeadType> head_types = {
         SSMHeadType::FINANCIAL_PRICE,
         SSMHeadType::FINANCIAL_VOLUME,
-        SSMHeadType::MEDICAL_SIGNAL,
-        SSMHeadType::IOT_SENSOR
+        SSMHeadType::FINANCIAL_SENTIMENT,
+        SSMHeadType::GENERAL
     };
     
     cout << "Processing " << inputs.size() << " heads with different types:" << endl;
@@ -159,10 +159,6 @@ void test_multihead_processing() {
             case SSMHeadType::FINANCIAL_PRICE: cout << "FINANCIAL_PRICE"; break;
             case SSMHeadType::FINANCIAL_VOLUME: cout << "FINANCIAL_VOLUME"; break;
             case SSMHeadType::FINANCIAL_SENTIMENT: cout << "FINANCIAL_SENTIMENT"; break;
-            case SSMHeadType::MEDICAL_SIGNAL: cout << "MEDICAL_SIGNAL"; break;
-            case SSMHeadType::MEDICAL_ANOMALY: cout << "MEDICAL_ANOMALY"; break;
-            case SSMHeadType::IOT_SENSOR: cout << "IOT_SENSOR"; break;
-            case SSMHeadType::IOT_EVENT: cout << "IOT_EVENT"; break;
             default: cout << "GENERAL"; break;
         }
         cout << endl;
@@ -189,18 +185,6 @@ void test_domain_specific_configurations() {
     financial_config.is_financial_data = true;
     SSMSparseAttention financial_attention(financial_config);
     cout << "Financial attention initialized" << endl;
-    
-    // Test medical configuration
-    SparseAttentionConfig medical_config;
-    medical_config.is_medical_data = true;
-    SSMSparseAttention medical_attention(medical_config);
-    cout << "Medical attention initialized" << endl;
-    
-    // Test IoT configuration
-    SparseAttentionConfig iot_config;
-    iot_config.is_iot_data = true;
-    SSMSparseAttention iot_attention(iot_config);
-    cout << "IoT attention initialized" << endl;
     
     cout << "Domain-specific configuration test completed!" << endl;
     cout << endl;
