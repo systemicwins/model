@@ -275,7 +275,7 @@ ACTDecision make_decision(const Eigen::MatrixXf& current_state,
 
 **Dynamic Step Allocation:**
 - **Simple samples** (clear trends): 2-4 steps
-- **Complex samples** (uncertain data): 8-16 steps  
+- **Complex samples** (uncertain data): 8-16 steps
 - **Average usage**: 2.33 steps (vs fixed 16)
 
 **Training vs Inference:**
@@ -286,6 +286,156 @@ ACTDecision make_decision(const Eigen::MatrixXf& current_state,
 - **High confidence markets** (stable trends): Early halting
 - **Volatile periods** (high uncertainty): Full computation
 - **Regime changes**: Adaptive threshold adjustment
+
+#### Recursive Nature of ACT in Financial Time Series
+
+**The Recursive Decision Process**
+
+ACT's recursive nature emerges from its temporal dependency structure, where each computational decision builds upon accumulated state from previous time steps. This is particularly powerful for financial applications across different timeframes.
+
+```cpp
+// Recursive state accumulation across timeframes
+ACTDecision make_decision(const Eigen::MatrixXf& current_market_state,
+                         const Eigen::MatrixXf& previous_output,
+                         int current_step, bool is_training) {
+    
+    // Extract features from accumulated history
+    auto state_features = extract_state_features(current_market_state, previous_output);
+    
+    // Compute confidence based on state stability and similarity
+    decision.confidence_score = compute_confidence(current_market_state, previous_output);
+    
+    // Q-learning uses recursive value propagation
+    float target_q = reward + discount_factor * next_q.maxCoeff();  // Recursive call
+    float td_error = target_q - current_q(action);
+    
+    // Update policy based on temporal difference
+    q_weights_.col(action) += learning_rate * td_error * state_features;
+    
+    return decision;  // This becomes "previous_output" for next recursive call
+}
+```
+
+**Multi-Timeframe Recursive Architecture**
+
+The recursive nature of ACT becomes particularly powerful when analyzing financial data across different timeframes:
+
+| Timeframe | Complexity | Typical Steps | Recursive Behavior |
+|-----------|------------|---------------|-------------------|
+| **1M Candles** | **Very High** | 8-16 steps | Micro-movements create rapid state changes |
+| **5M Candles** | **High** | 4-8 steps | Moderate volatility requires layered analysis |
+| **15M Candles** | **Low-Medium** | 2-4 steps | Smoother patterns allow early halting |
+
+**Recursive State Evolution Across Timeframes**
+
+```
+15M Analysis (Top Level)
+    ↑
+    │ Recursive Decision Point 1: Market regime identification
+    │ State: {15M_trend, 15M_volume, economic_context}
+    ↓
+    5M Analysis (Mid Level)
+    ↑
+    │ Recursive Decision Point 2: Price action confirmation
+    │ State: {5M_patterns, 15M_context, momentum_indicators}
+    ↓
+    1M Analysis (Granular Level)
+    ↑
+    │ Recursive Decision Point 3: Entry/exit precision
+    │ State: {1M_volatility, 5M_confirmation, 15M_drift}
+    ↓
+    Final Decision: Trade execution parameters
+```
+
+**Why Recursion Matters for Different Timeframes**
+
+1. **Hierarchical Information Processing**
+   - **15M candles**: Establish market regime and trend direction
+   - **5M candles**: Confirm price action within established context
+   - **1M candles**: Execute precise entries/exits based on higher timeframe confirmation
+
+2. **State Accumulation Across Scales**
+   ```cpp
+   // Recursive state builds across timeframes
+   struct TimeframeState {
+       Matrix cumulative_context;    // Builds from previous timeframes
+       float confidence_evolution;   // Recursive confidence accumulation
+       Vector q_value_trajectory;    // Learned stopping policy across scales
+   };
+   ```
+
+3. **Adaptive Complexity Based on Market Conditions**
+   - **High Volatility** (1M complexity): More recursive steps, deeper analysis
+   - **Stable Trends** (15M complexity): Fewer recursive steps, early halting
+   - **Regime Transitions**: Recursive adaptation between timeframe complexities
+
+4. **Cross-Timeframe Learning**
+   The Q-learning policy recursively learns from all timeframes:
+   ```cpp
+   // Recursive Q-value updates across timeframes
+   void update_cross_timeframe_policy(const Matrix& current_state,
+                                     int action, float reward,
+                                     const Matrix& next_state) {
+       // Update considers both current and historical timeframe decisions
+       float historical_context = get_15m_context();
+       float momentum_confirmation = get_5m_patterns();
+       float execution_precision = get_1m_volatility();
+       
+       // Recursive reward computation across all timeframes
+       float total_reward = combine_timeframe_rewards(
+           historical_context, momentum_confirmation, execution_precision
+       );
+       
+       // Update Q-network with multi-timeframe information
+       update_q_network(current_state, action, total_reward, next_state);
+   }
+   ```
+
+**Practical Implementation**
+
+The recursive ACT controller for multi-timeframe analysis:
+
+```cpp
+class MultiTimeframeACT {
+    ACTController controller_15m;
+    ACTController controller_5m;
+    ACTController controller_1m;
+    
+    recursive_decision(market_data, timeframe_context, depth) {
+        if (depth == 0) return final_decision;
+        
+        // Get decision for current timeframe
+        auto decision = controller[timeframe].make_decision(
+            market_data, previous_context, current_step
+        );
+        
+        if (decision.should_halt) {
+            return decision;  // Base case for recursion
+        }
+        
+        // Recursive call to finer timeframe with updated context
+        return recursive_decision(market_data,
+                                 update_context(timeframe_context, decision),
+                                 depth - 1);
+    }
+};
+```
+
+**Performance Benefits for Multi-Timeframe Analysis**
+
+- **Efficiency**: 15M analysis often halts after 2-3 steps if trend is clear
+- **Accuracy**: 1M analysis continues to 8-12 steps for precision entries
+- **Adaptation**: System learns when to switch between timeframe complexities
+- **Memory**: Recursive state management prevents context explosion
+
+**Real-World Example**
+
+For a stock in an uptrend:
+- **15M**: Halt after 2 steps (clear bullish pattern)
+- **5M**: Halt after 3 steps (momentum confirmation)
+- **1M**: Continue to 6 steps (precise entry timing)
+
+This recursive approach ensures the model allocates computational resources proportionally to the information complexity of each timeframe, leading to both efficiency and accuracy in financial prediction.
 
 #### ACT Integration in Full Model
 
