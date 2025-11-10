@@ -39,7 +39,7 @@ void test_basic_sparse_attention() {
     // Generate test data
     Matrix query = generate_random_matrix(4, 64);
     Matrix key = generate_random_matrix(4, 64);
-    Matrix value = generate_random_matrix(64, 32);
+    Matrix value = generate_random_matrix(4, 64);
     
     cout << "Query shape: " << query.rows() << " x " << query.cols() << endl;
     cout << "Key shape: " << key.rows() << " x " << key.cols() << endl;

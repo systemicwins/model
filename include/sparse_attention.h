@@ -90,6 +90,13 @@ public:
         int current_position
     );
     
+    // NEW: Mamba2 scalar A integration for enhanced attention pattern detection
+    StateChangeMetrics analyze_state_change_with_scalar_a(
+        const std::vector<Matrix>& ssm_states,
+        const std::vector<float>& scalar_a_values,
+        int current_position
+    );
+    
     // Dynamic pattern selection based on state change
     AttentionPattern select_attention_pattern(const StateChangeMetrics& metrics);
     

@@ -74,12 +74,14 @@ class LayerNorm;
 struct MambaConfig {
     int embed_dim = 1536;
     int state_dim = 128;           // SSM internal state dimension
+    int num_heads = 12;            // Number of attention heads for scalar A
     int num_layers = 6;
     int conv_kernel_size = 4;      // Convolution kernel size
     float dropout_rate = 0.1f;
     int max_seq_length = 100000;   // Increased for long context
     float layer_norm_eps = 1e-6f;
     bool use_selective_ssm = true;  // Use selective state space modeling
+    bool use_scalar_a = true;      // Use scalar A matrix (Mamba2 innovation)
     int num_threads = 0;           // 0 = auto-detect
     float ssm_dt_init = 0.001f;    // SSM time step initialization
     float ssm_dt_scale = 1.0f;     // SSM time step scaling
@@ -97,19 +99,49 @@ public:
 
     transformer::Matrix forward(const transformer::Matrix& input, const transformer::Matrix* mask = nullptr);
     void set_training(bool training);
+    
+    // Get scalar A values for sparse attention integration
+    std::vector<float> get_scalar_a_values() const { return scalar_a_values_; }
+    
+    // Set scalar A values (for training)
+    void set_scalar_a_values(const std::vector<float>& values) { scalar_a_values_ = values; }
+    
+    // NEW: Integrate with sparse attention using scalar A values
+    transformer::Matrix forward_with_sparse_attention(
+        const transformer::Matrix& input,
+        class SSMSparseAttention& sparse_attention
+    );
 
 private:
     MambaConfig config_;
 
-    // SSM parameters (placeholders)
-    transformer::Matrix A_;
-    transformer::Matrix B_;
-    transformer::Matrix C_;
-    transformer::Matrix D_;
+    // SSM parameters - Mamba2 scalar A innovation
+    std::vector<float> scalar_a_values_;  // One scalar per attention head
+    transformer::Matrix B_;               // Input projection (embed_dim x state_dim)
+    transformer::Matrix C_;               // Output projection (state_dim x embed_dim)
+    transformer::Matrix D_;               // Direct pass-through (embed_dim x embed_dim)
 
-    // Convolution and gating (placeholders)
+    // Convolution and gating
     transformer::Matrix conv_weight_;
     transformer::Matrix gate_proj_;
+    
+    // Private helper methods
+    transformer::Matrix apply_scalar_ssm(const transformer::Matrix& input);
+    transformer::Matrix parallel_state_evolution(const transformer::Matrix& conv_out);
+    
+    // Sparse attention helper methods
+    transformer::Matrix compute_dense_attention_from_states(
+        const std::vector<transformer::Matrix>& states,
+        const transformer::Matrix& conv_out);
+    transformer::Matrix compute_local_attention_from_states(
+        const std::vector<transformer::Matrix>& states,
+        const transformer::Matrix& conv_out);
+    transformer::Matrix compute_strided_attention_from_states(
+        const std::vector<transformer::Matrix>& states,
+        const transformer::Matrix& conv_out);
+    transformer::Matrix compute_sparse_attention_from_states(
+        const std::vector<transformer::Matrix>& states,
+        const transformer::Matrix& conv_out);
 };
 
 class MambaModel {

@@ -15,6 +15,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Enable -Werror to treat warnings as errors
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+
 if(ENABLE_HIP)
     # Manual HIP configuration for ROCm
     set(HIP_PATH "/opt/rocm-7.0.0" CACHE PATH "HIP installation path")
@@ -111,9 +114,21 @@ set(HEADERS
 
 # Create executables
 add_executable(mamba_model ${SOURCES})
-add_executable(test_sparse_attention test_sparse_attention.cpp)
+
+# Test executables with required source files
+set(TEST_SOURCES
+    test_sparse_attention.cpp
+    src/mamba.cpp
+    src/sparse_attention.cpp
+    src/tensor_ops.cpp
+    src/layer_norm.cpp
+)
+
+add_executable(test_sparse_attention ${TEST_SOURCES})
+
 target_compile_definitions(mamba_model PRIVATE MAX_SEQUENCE_LENGTH=100000)
 target_compile_definitions(test_sparse_attention PRIVATE MAX_SEQUENCE_LENGTH=100000)
+
 target_include_directories(test_sparse_attention PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     /tmp/eigen-3.4.0
@@ -162,7 +177,6 @@ endif()
 # Link libraries for main executable
 target_link_libraries(mamba_model PRIVATE ${MAMBA_LINK_LIBS})
 
-# Link libraries for test executable
 target_link_libraries(test_sparse_attention PRIVATE ${MAMBA_LINK_LIBS})
 target_include_directories(test_sparse_attention PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include

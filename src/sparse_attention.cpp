@@ -8,7 +8,7 @@
 namespace mamba {
 
 // Constructor
-SSMSparseAttention::SSMSparseAttention(const SparseAttentionConfig& config) 
+SSMSparseAttention::SSMSparseAttention(const SparseAttentionConfig& config)
     : config(config) {
     
     // Initialize state history with empty vectors
@@ -28,17 +28,17 @@ SSMSparseAttention::SSMSparseAttention(const SparseAttentionConfig& config)
         initialize_financial_parameters();
     }
     
-    std::cout << "SSMSparseAttention initialized with " 
-              << (config.enable_sparse_attention ? "sparse attention enabled" : "dense attention only") 
+    std::cout << "SSMSparseAttention initialized with "
+              << (config.enable_sparse_attention ? "sparse attention enabled" : "dense attention only")
               << std::endl;
 }
 
 // Main sparse attention computation
 Matrix SSMSparseAttention::compute_sparse_attention(
-    const Matrix& query, 
-    const Matrix& key, 
+    const Matrix& query,
+    const Matrix& key,
     const Matrix& value,
-    const std::vector<SSMHeadType>& head_types) {
+    const std::vector<SSMHeadType>& /*head_types*/) {
     
     if (!config.enable_sparse_attention || !config.track_state_changes) {
         return compute_dense_attention(query, key, value);
@@ -94,7 +94,7 @@ StateChangeMetrics SSMSparseAttention::analyze_state_change(
     metrics.is_transition_point = (metrics.change_rate > config.high_change_threshold);
     
     // Compute per-head change rates if available
-    if (ssm_states.size() >= current_position + 1) {
+    if (static_cast<size_t>(ssm_states.size()) >= static_cast<size_t>(current_position) + 1) {
         metrics.head_change_rates = compute_per_head_change_rates(ssm_states);
     }
     
@@ -111,6 +111,78 @@ StateChangeMetrics SSMSparseAttention::analyze_state_change(
     } else {
         metrics.attention_weight = 0.2f; // Global sparse
     }
+    
+    return metrics;
+}
+
+// NEW: Mamba2 scalar A integration for enhanced attention pattern detection
+StateChangeMetrics SSMSparseAttention::analyze_state_change_with_scalar_a(
+    const std::vector<Matrix>& ssm_states,
+    const std::vector<float>& scalar_a_values,
+    int current_position) {
+    
+    StateChangeMetrics metrics;
+    metrics.change_rate = 0.0f;
+    metrics.change_magnitude = 0.0f;
+    metrics.volatility = 0.0f;
+    metrics.is_transition_point = false;
+    metrics.attention_weight = 1.0f;
+    metrics.head_change_rates.clear();
+    
+    if (ssm_states.size() < 2) {
+        return metrics;
+    }
+    
+    // Compute change rate between current and previous state
+    const Matrix& current_state = ssm_states[current_position];
+    const Matrix& previous_state = ssm_states[current_position - 1];
+    
+    metrics.change_rate = compute_l2_norm(current_state - previous_state);
+    metrics.change_magnitude = compute_l2_norm(current_state);
+    
+    // Mamba2 Enhancement: Use scalar A values to inform state change analysis
+    if (scalar_a_values.size() > 0) {
+        // Compute average absolute scalar A value
+        float avg_scalar_a = 0.0f;
+        for (float a_val : scalar_a_values) {
+            avg_scalar_a += std::abs(a_val);
+        }
+        avg_scalar_a /= scalar_a_values.size();
+        
+        // Scale change rate by scalar A dynamics
+        metrics.change_rate = metrics.change_rate * (1.0f + avg_scalar_a);
+        
+        // Update attention weight based on scalar A informed analysis
+        if (metrics.change_rate > config.high_change_threshold) {
+            metrics.attention_weight = 1.0f; // Dense attention
+        } else if (metrics.change_rate > config.moderate_change_threshold) {
+            metrics.attention_weight = 0.8f; // Local window
+        } else if (metrics.change_rate > config.low_change_threshold) {
+            metrics.attention_weight = 0.5f; // Strided
+        } else {
+            metrics.attention_weight = 0.2f; // Global sparse
+        }
+    }
+    
+    // Compute volatility based on recent state changes
+    if (state_history.size() > 0) {
+        std::vector<float> recent_changes;
+        for (const auto& history_item : state_history) {
+            recent_changes.push_back(history_item.change_rate);
+        }
+        metrics.volatility = compute_volatility(recent_changes);
+    }
+    
+    // Determine if this is a transition point
+    metrics.is_transition_point = (metrics.change_rate > config.high_change_threshold);
+    
+    // Compute per-head change rates if available
+    if (static_cast<size_t>(ssm_states.size()) >= static_cast<size_t>(current_position) + 1) {
+        metrics.head_change_rates = compute_per_head_change_rates(ssm_states);
+    }
+    
+    // Update state history
+    update_state_history(metrics);
     
     return metrics;
 }
@@ -152,10 +224,6 @@ std::vector<Matrix> SSMSparseAttention::forward_multihead(
             default:
                 // General processing
                 break;
-                
-            default:
-                // General processing
-                break;
         }
         
         outputs.push_back(processed_input);
@@ -165,15 +233,15 @@ std::vector<Matrix> SSMSparseAttention::forward_multihead(
 }
 
 // Threshold adaptation
-void SSMSparseAttention::adapt_thresholds(const StateChangeMetrics& current_metrics) {
+void SSMSparseAttention::adapt_thresholds(const StateChangeMetrics& /*current_metrics*/) {
     if (!config.enable_adaptive_thresholds) {
         return;
     }
     
     // Adapt thresholds based on recent state change patterns
-    if (state_history.size() >= config.adaptation_window) {
+    if (static_cast<size_t>(state_history.size()) >= static_cast<size_t>(config.adaptation_window)) {
         std::vector<float> recent_changes;
-        for (int i = state_history.size() - config.adaptation_window; i < state_history.size(); ++i) {
+        for (size_t i = state_history.size() - static_cast<size_t>(config.adaptation_window); i < state_history.size(); ++i) {
             recent_changes.push_back(state_history[i].change_rate);
         }
         
