@@ -567,7 +567,6 @@ struct ACTConfig {
 ### Hardware Optimization
 
 - **CPU Builds**: Optimized for general-purpose processing
-- **ROCm GPU**: AMD GPU acceleration with HIP compilation
 - **Memory Efficiency**: Matryoshka encoding reduces memory by 67-96%
 - **Parallel Computation**: 5-10x training speedup through parallel parameter computation
 
@@ -632,7 +631,7 @@ if (decision.should_halt) {
 
 - **Context Length**: 100,000+ tokens (theoretically infinite)
 - **Sequence Processing**: Linear O(n) scaling
-- **Hardware Support**: CPU, ROCm GPU (AMD), CUDA (with adaptation)
+- **Hardware Support**: CPU optimized
 - **Batch Processing**: Efficient batch operations across all components
 
 ### Financial Domain Specialization
@@ -676,12 +675,8 @@ git clone <repository>
 cd model
 mkdir build && cd build
 
-# CPU build
+# CPU build (recommended)
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
-
-# ROCm GPU build (AMD)
-cmake .. -DENABLE_HIP=ON -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 ```
 

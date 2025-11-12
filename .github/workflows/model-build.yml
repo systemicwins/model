@@ -1,4 +1,4 @@
-name: Build Model
+name: Build Model (CPU Only)
 
 on:
   push:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    name: Build Mamba Model
+    name: Build Mamba Model (CPU)
     runs-on: ubuntu-latest
 
     steps:
@@ -27,14 +27,27 @@ jobs:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libeigen3-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libeigen3-dev cmake build-essential
 
       - name: Configure build
         working-directory: ./model
         run: |
-          cmake -S . -B build -DENABLE_HIP=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         working-directory: ./model
         run: cmake --build build --config Release --parallel
+
+      - name: Test build
+        working-directory: ./model
+        run: |
+          if [ -f build/mamba_model ]; then
+            echo "Build successful - mamba_model executable found"
+            ./build/mamba_model --version || echo "No version flag available"
+          else
+            echo "Build failed - mamba_model executable not found"
+            exit 1
+          fi
 

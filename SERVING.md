@@ -81,7 +81,7 @@ Production deployment using TensorFlow Serving for ultra-low latency inference w
 │  └────────────────────┬─────────────────────────────────────────┘       │
 │                       ▼                                                 │
 │  ┌─────────────────────────────────────────────────────────────┐       │
-│  │                 Inference Engine (GPU/ROCm)                  │       │
+│  │                 Inference Engine (CPU)                       │       │
 │  │                                                              │       │
 │  │  • Dynamic Batching (1-100ms window)                        │       │
 │  │  • Request Coalescing                                       │       │
