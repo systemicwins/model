@@ -4,13 +4,11 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'model'
       - 'model/**'
       - '.github/workflows/model-build.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'model'
       - 'model/**'
       - '.github/workflows/model-build.yml'
 
@@ -32,17 +30,18 @@ jobs:
           sudo apt-get install -y libcurl4-openssl-dev libeigen3-dev cmake build-essential
 
       - name: Configure build
-        working-directory: ./model
         run: |
+          cd model
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        working-directory: ./model
-        run: cmake --build build --config Release --parallel
+        run: |
+          cd model
+          cmake --build build --config Release --parallel
 
       - name: Test build
-        working-directory: ./model
         run: |
+          cd model
           if [ -f build/mamba_model ]; then
             echo "Build successful - mamba_model executable found"
             ./build/mamba_model --version || echo "No version flag available"
