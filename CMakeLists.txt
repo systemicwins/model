@@ -5,8 +5,20 @@ option(ENABLE_HIP "Enable HIP/ROCm GPU acceleration" OFF)
 
 # Set HIP compiler if HIP is enabled (must be set before project() declaration)
 if(ENABLE_HIP)
-    set(CMAKE_HIP_COMPILER "/opt/rocm-7.0.0/bin/hipcc" CACHE FILEPATH "HIP compiler")
-    set(CMAKE_CXX_COMPILER "/opt/rocm-7.0.0/bin/hipcc" CACHE FILEPATH "C++ compiler")
+    # Allow user to specify ROCm path, fallback to common locations
+    if(NOT DEFINED ROCM_PATH)
+        if(EXISTS "/opt/rocm-7.0.0")
+            set(ROCM_PATH "/opt/rocm-7.0.0")
+        elseif(EXISTS "/opt/rocm")
+            set(ROCM_PATH "/opt/rocm")
+        else()
+            # Let find_package handle it
+            set(ROCM_PATH "")
+        endif()
+    endif()
+    
+    set(CMAKE_HIP_COMPILER "${ROCM_PATH}/bin/hipcc" CACHE FILEPATH "HIP compiler")
+    set(CMAKE_CXX_COMPILER "${CMAKE_HIP_COMPILER}" CACHE FILEPATH "C++ compiler")
 endif()
 
 project(MambaModel VERSION 1.0.0 LANGUAGES CXX)
@@ -20,7 +32,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 
 if(ENABLE_HIP)
     # Manual HIP configuration for ROCm
-    set(HIP_PATH "/opt/rocm-7.0.0" CACHE PATH "HIP installation path")
+    set(HIP_PATH "${ROCM_PATH}" CACHE PATH "HIP installation path")
     set(CMAKE_HIP_COMPILER "${HIP_PATH}/bin/hipcc")
 
     # Check if HIP compiler exists
@@ -61,13 +73,50 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(json)
 
 # Eigen for linear algebra operations
-# Using manual configuration for header-only Eigen3
-set(EIGEN3_INCLUDE_DIR "/tmp/eigen-3.4.0")
+# Allow user to override via environment variable or cache variable
+if(DEFINED ENV{EIGEN3_INCLUDE_DIR})
+    set(EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" CACHE PATH "Eigen3 include directory")
+elseif(DEFINED EIGEN3_INCLUDE_DIR)
+    # Keep existing value
+else()
+    # Default location for local development
+    set(EIGEN3_INCLUDE_DIR "/tmp/eigen-3.4.0" CACHE PATH "Eigen3 include directory")
+endif()
+
+# Check if Eigen3 exists at specified location
 if(EXISTS "${EIGEN3_INCLUDE_DIR}")
     message(STATUS "Found Eigen3 at: ${EIGEN3_INCLUDE_DIR}")
     set(Eigen3_FOUND TRUE)
 else()
-    message(FATAL_ERROR "Eigen3 not found at ${EIGEN3_INCLUDE_DIR}")
+    # Fallback to system-installed Eigen3 locations
+    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/usr;/usr/local;/opt/homebrew")
+    
+    # Try to find Eigen3 using find_package
+    find_package(Eigen3 3.4 QUIET)
+    
+    if(EIGEN3_FOUND)
+        message(STATUS "Found Eigen3 using find_package: ${EIGEN3_INCLUDE_DIR}")
+    else()
+        # Try common installation paths
+        set(COMMON_EIGEN_PATHS
+            /usr/include/eigen3
+            /usr/local/include/eigen3
+            /opt/homebrew/include/eigen3
+        )
+        
+        foreach(PATH ${COMMON_EIGEN_PATHS})
+            if(EXISTS "${PATH}/Eigen")
+                set(EIGEN3_INCLUDE_DIR "${PATH}" CACHE PATH "Eigen3 include directory")
+                message(STATUS "Found Eigen3 at: ${EIGEN3_INCLUDE_DIR}")
+                set(Eigen3_FOUND TRUE)
+                break()
+            endif()
+        endforeach()
+        
+        if(NOT EIGEN3_FOUND)
+            message(FATAL_ERROR "Eigen3 not found. Please install Eigen3 development package or set EIGEN3_INCLUDE_DIR environment variable.")
+        endif()
+    endif()
 endif()
 
 # Add source files
@@ -131,14 +180,14 @@ target_compile_definitions(test_sparse_attention PRIVATE MAX_SEQUENCE_LENGTH=100
 
 target_include_directories(test_sparse_attention PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    /tmp/eigen-3.4.0
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 # Include directories
 target_include_directories(mamba_model PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CURL_INCLUDE_DIRS}
-    /tmp/eigen-3.4.0
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 if(ENABLE_HIP)
@@ -180,7 +229,7 @@ target_link_libraries(mamba_model PRIVATE ${MAMBA_LINK_LIBS})
 target_link_libraries(test_sparse_attention PRIVATE ${MAMBA_LINK_LIBS})
 target_include_directories(test_sparse_attention PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    /tmp/eigen-3.4.0
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 # OpenMP configuration
