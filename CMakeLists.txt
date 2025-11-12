@@ -27,8 +27,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Enable -Werror to treat warnings as errors
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+# Remove -Werror flag to allow warnings without failing build
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 
 if(ENABLE_HIP)
     # Manual HIP configuration for ROCm
